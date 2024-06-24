@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "ocsf-compile"
+version = "0.1.0"
+description = "Library to compile the OCSF schema from a repository"
+authors = ["Jeremy Fisher <jeremy@query.ai>"]
+readme = "README.md"
+license = "Apache-2.0"
+packages = [
+    { include = "ocsf", from = "src" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+semver = "^3.0.2"
+termcolor = "^2.4.0"
+#ocsf-lib = {path = "../ocsf-lib-py", develop = true} 
+ocsf-lib = "^0.2.0"
+dacite = "^1.8.1"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4.2"
+pyright = "^1.1.361"
+pytest = "^8.2.0"
+
+[tool.poetry.scripts]
+#validate = "ocsf.validate.compatibility.__main__:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: mark a test as an integration test",
+    "unit: mark a test as a unit test",
+]
+
+[tool.ruff]
+line-length = 120
