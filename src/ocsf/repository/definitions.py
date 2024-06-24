@@ -1,4 +1,3 @@
-"""This module contains the dataclasses that represent the OCSF schema."""
 
 from abc import ABC
 from dataclasses import dataclass
@@ -8,7 +7,9 @@ from typing import Any, Optional, TypeVar
 
 IncludeTarget = str | list[str]
 
-class DefinitionData(ABC): ...
+class DefinitionPart(ABC): ...
+
+class DefinitionData(DefinitionPart): ...
 
 
 @dataclass
@@ -17,7 +18,7 @@ class VersionDefn(DefinitionData):
 
 
 @dataclass
-class EnumMemberDefn:
+class EnumMemberDefn(DefinitionPart):
     """An enum member. Enums are dictionaries of str: EnumMemberDefn."""
 
     caption: Optional[str] = None
@@ -26,7 +27,7 @@ class EnumMemberDefn:
 
 
 @dataclass
-class DeprecationInfoDefn:
+class DeprecationInfoDefn(DefinitionPart):
     """Deprecation information for an object, event, or attribute."""
 
     message: Optional[str] = None
@@ -34,7 +35,7 @@ class DeprecationInfoDefn:
 
 
 @dataclass
-class TypeDefn:
+class TypeDefn(DefinitionPart):
     """A data type definition."""
 
     caption: Optional[str] = None
@@ -50,13 +51,13 @@ class TypeDefn:
     values: Optional[list[Any]] = None
 
 @dataclass
-class DictionaryTypesDefn:
+class DictionaryTypesDefn(DefinitionPart):
     attributes: Optional[dict[str, TypeDefn]] = None
     caption: Optional[str] = None
     description: Optional[str] = None
 
 @dataclass
-class AttrDefn:
+class AttrDefn(DefinitionPart):
     """An attribute definition."""
 
     caption: Optional[str] = None
@@ -151,7 +152,7 @@ class ExtensionDefn(DefinitionData):
     deprecated: Optional[DeprecationInfoDefn] = None
 
 @dataclass
-class CategoryDefn:
+class CategoryDefn(DefinitionPart):
     """A category definition."""
 
     caption: Optional[str] = None
