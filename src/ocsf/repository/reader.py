@@ -1,4 +1,3 @@
-
 import json
 import dacite
 
@@ -31,13 +30,12 @@ def _walk_path(path: Path, repo: Repository, preserve_raw_data: bool) -> None:
                 repo[sanitize_path(entry)] = defn
 
         elif entry.is_dir() and (
-            entry.name in REPO_PATHS
-            or entry.parent.name in REPO_PATHS
-            or RepoPaths.EVENTS.value in entry.parts
+            entry.name in REPO_PATHS or entry.parent.name in REPO_PATHS or RepoPaths.EVENTS.value in entry.parts
         ):
             _walk_path(entry, repo, preserve_raw_data)
 
-def repo_from_dir(path: Pathlike, preserve_raw_data: bool = False) -> Repository:
+
+def read_repo(path: Pathlike, preserve_raw_data: bool = False) -> Repository:
     """Load a directory of schema definition files into a Repository."""
     repo = Repository()
 

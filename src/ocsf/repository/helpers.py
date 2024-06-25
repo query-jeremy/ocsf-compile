@@ -1,11 +1,21 @@
-
 from enum import StrEnum
 from pathlib import PurePath
 
-from .definitions import ObjectDefn, EventDefn, IncludeDefn, ProfileDefn, DictionaryDefn, CategoriesDefn, VersionDefn, ExtensionDefn, AnyDefinition
+from .definitions import (
+    ObjectDefn,
+    EventDefn,
+    IncludeDefn,
+    ProfileDefn,
+    DictionaryDefn,
+    CategoriesDefn,
+    VersionDefn,
+    ExtensionDefn,
+    AnyDefinition,
+)
 
 Pathlike = PurePath | str
 RepoPath = str
+
 
 class RepoPaths(StrEnum):
     """Top level paths in a repository."""
@@ -15,6 +25,7 @@ class RepoPaths(StrEnum):
     EXTENSIONS = "extensions"
     INCLUDES = "includes"
     PROFILES = "profiles"
+
 
 REPO_PATHS = tuple([e.value for e in RepoPaths])
 
@@ -30,6 +41,7 @@ class SpecialFiles(StrEnum):
     @staticmethod
     def contains(path: str) -> bool:
         return path in [e.value for e in SpecialFiles]
+
 
 SPECIAL_FILES = tuple([e.value for e in SpecialFiles])
 
@@ -68,14 +80,17 @@ def sanitize_path(*path: Pathlike) -> RepoPath:
 def as_path(*args: Pathlike) -> RepoPath:
     return PurePath(*args).as_posix()
 
+
 def short_name(*args: Pathlike) -> str:
     return PurePath(*args).stem
+
 
 def extension(*args: Pathlike) -> str | None:
     p = as_path(*args)
     if p.startswith(RepoPaths.EXTENSIONS):
         return PurePath(*args).parts[1]
     return None
+
 
 def extensionless(*args: Pathlike) -> RepoPath:
     p = as_path(*args)
@@ -84,6 +99,7 @@ def extensionless(*args: Pathlike) -> RepoPath:
     else:
         return p
 
+
 def category(*args: Pathlike) -> str | None:
     """The category of a repository path."""
     k = PurePath(extensionless(*args))
@@ -91,6 +107,7 @@ def category(*args: Pathlike) -> str | None:
         return as_path(*k.parts[1:-1])
 
     return None
+
 
 def categoryless(*args: Pathlike) -> str:
     """The repository path without a category prefix."""
@@ -106,6 +123,7 @@ def categoryless(*args: Pathlike) -> str:
         return as_path(*k.parts[0 : 1 + idx] + (k.parts[-1],))
 
     return as_path(*args)
+
 
 def expected_defn(*path_parts: Pathlike) -> type[AnyDefinition]:
     path = sanitize_path(*path_parts)

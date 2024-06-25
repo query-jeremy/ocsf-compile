@@ -1,4 +1,3 @@
-
 from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Optional, TypeVar
@@ -7,7 +6,9 @@ from typing import Any, Optional, TypeVar
 
 IncludeTarget = str | list[str]
 
+
 class DefinitionPart(ABC): ...
+
 
 class DefinitionData(DefinitionPart): ...
 
@@ -50,11 +51,13 @@ class TypeDefn(DefinitionPart):
     type_name: Optional[str] = None
     values: Optional[list[Any]] = None
 
+
 @dataclass
 class DictionaryTypesDefn(DefinitionPart):
     attributes: Optional[dict[str, TypeDefn]] = None
     caption: Optional[str] = None
     description: Optional[str] = None
+
 
 @dataclass
 class AttrDefn(DefinitionPart):
@@ -71,6 +74,7 @@ class AttrDefn(DefinitionPart):
     observable: Optional[int] = None
     profile: Optional[str | list[str]] = None
     sibling: Optional[str] = None
+
 
 @dataclass
 class DictionaryDefn(DefinitionData):
@@ -151,6 +155,7 @@ class ExtensionDefn(DefinitionData):
     description: Optional[str] = None
     deprecated: Optional[DeprecationInfoDefn] = None
 
+
 @dataclass
 class CategoryDefn(DefinitionPart):
     """A category definition."""
@@ -172,4 +177,6 @@ class CategoriesDefn(DefinitionData):
 
 
 DefinitionT = TypeVar("DefinitionT", bound=DefinitionData, covariant=True)
-AnyDefinition = ObjectDefn | EventDefn | ProfileDefn | ExtensionDefn | DictionaryDefn | IncludeDefn | CategoriesDefn | VersionDefn
+AnyDefinition = (
+    ObjectDefn | EventDefn | ProfileDefn | ExtensionDefn | DictionaryDefn | IncludeDefn | CategoriesDefn | VersionDefn
+)
