@@ -1,0 +1,52 @@
+{
+  "caption": "Software Package",
+  "description": "The Software Package object describes details about a software package. Defined by D3FEND <a target='_blank' href='https://d3fend.mitre.org/dao/artifact/d3f:SoftwarePackage/'>d3f:SoftwarePackage</a>.",
+  "extends": "object",
+  "name": "package",
+  "attributes": {
+    "architecture": {
+      "requirement": "recommended"
+    },
+    "epoch": {
+      "requirement": "optional"
+    },
+    "license": {
+      "description": "The software license applied to this package.",
+      "requirement": "optional"
+    },
+    "name": {
+      "description": "The software package name.",
+      "requirement": "required"
+    },
+    "purl":{
+      "requirement": "optional"
+    },
+    "release": {
+      "requirement": "optional"
+    },
+    "vendor_name": {
+      "requirement": "optional"
+    },
+    "type": {
+      "description": "The type of software package, normalized to the caption of the type_id value. In the case of 'Other', it is defined by the source.",
+      "requirement": "optional"
+    },
+    "type_id": {
+      "enum": {
+        "1": {
+          "caption": "Application",
+          "description": "An application software package."
+        },
+        "2": {
+          "caption": "Operating System",
+          "description": "An operating system software package."
+        }
+      },
+      "requirement": "recommended"
+    },
+    "version": {
+      "description": "The software package version.",
+      "requirement": "required"
+    }
+  }
+}

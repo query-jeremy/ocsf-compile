@@ -2,22 +2,23 @@ import json
 import dacite
 
 from pathlib import Path
-from .definitions import AnyDefinition
 from .repository import Repository, DefinitionFile
-from .helpers import REPO_PATHS, RepoPaths, Pathlike, sanitize_path, expected_defn
+from .helpers import REPO_PATHS, RepoPaths, Pathlike, sanitize_path, path_defn_t
+
+from ocsf.schema import keys_to_names
 
 
-def _to_defn(path: Pathlike, raw_data: str, preserve_raw_data: bool) -> DefinitionFile[AnyDefinition]:
-    kind = expected_defn(path)
+def _to_defn(path: Pathlike, raw_data: str, preserve_raw_data: bool) -> DefinitionFile:
+    kind = path_defn_t(path)
 
     path = sanitize_path(path)
-    defn = DefinitionFile[kind](path)
+    defn = DefinitionFile(path)
 
     if preserve_raw_data:
         defn.raw_data = raw_data
 
     data = json.loads(raw_data)
-    defn.data = dacite.from_dict(kind, data)
+    defn.data = dacite.from_dict(kind, keys_to_names(data))
 
     return defn
 

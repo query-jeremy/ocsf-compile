@@ -3,12 +3,22 @@ from typing import get_type_hints, cast, Optional, Any
 
 from ocsf.repository.definitions import DefinitionPart
 
+FieldList = list[str | tuple[str, ...]]
+
 
 @dataclass
 class MergeOptions:
     overwrite: Optional[bool] = None
-    allowed_fields: Optional[list[str | tuple[str, ...]]] = None
-    ignored_fields: Optional[list[str | tuple[str, ...]]] = None
+    """Always overwrite left with right"""
+
+    allowed_fields: Optional[FieldList] = None
+    """Only update fields that are in this list or are nested under a field in this list"""
+
+    ignored_fields: Optional[FieldList] = None
+    """Ignore fields that are in this list or are nested under a field in this list"""
+
+    add_dict_items: bool = True
+    """Add missing dictionary items from right to left if True"""
 
 
 def _can_update(path: tuple[str, ...], left_value: Any, right_value: Any, options: MergeOptions) -> bool:
@@ -16,33 +26,40 @@ def _can_update(path: tuple[str, ...], left_value: Any, right_value: Any, option
 
     Below are truth tables showing the logic of this function.
 
-    # Overwrite is False
-    |               | R is None | R is not None |
-    | L is None     | False     | True          |
-    | L is not None | False     | False         |
+    1. Default behavior
+     - overwrite is False
+     - allowed_fields is None or field is in allowed_fields
+     - ignored_fields is None or field is not in ignored_fields
+    |    | R0 | R1 |
+    | L0 | 0  | 1  |
+    | L1 | 0  | 0  |
 
-    # Overwrite is True
-    |               | R is None | R is not None |
-    | L is None     | True      | True          |
-    | L is not None | True      | True          |
+    2. Overwrite behavior
+     - overwrite is True
+     - allowed_fields is None or field is in allowed_fields
+     - ignored_fields is None or field is not in ignored_fields
+    |    | R0 | R1 |
+    | L0 | 1  | 1  |
+    | L1 | 1  | 1  |
 
-    # Field is in allowed_fields, overwrite is True
-    |               | R is None | R is not None |
-    | L is None     | True      | True          |
-    | L is not None | True      | True          |
+    3. Field is ignored or disallowed
+     - overwrite is True or False
+     - allowed_fields is not None and field is not in allowed_fields
+     - ignored_fields is not None and field is in ignored_fields
+    |    | R0 | R1 |
+    | L0 | 0  | 0  |
+    | L1 | 0  | 0  |
 
-    # Field is in allowed_fields, overwrite is False
-    |               | R is None | R is not None |
-    | L is None     | False     | True          |
-    | L is not None | False     | False         |
+    Key:
+        L0 = Left value is None
+        L1 = Left value is not None
+        R0 = Right value is None
+        R1 = Right value is not None
 
-    # Field is in ignore list
-    |               | R is None | R is not None |
-    | L is None     | False     | False         |
-    | L is not None | False     | False         | 
-    
+    Args:
+
     """
-    
+
     update: Optional[bool] = None
 
     def change_field():
@@ -63,11 +80,12 @@ def _can_update(path: tuple[str, ...], left_value: Any, right_value: Any, option
             if isinstance(allow, tuple):
                 if path[: len(allow)] == allow:
                     update = change_field()
-                    break
             else:
-                if path[-1] == allow:
+                if path[0] == allow:
                     update = change_field()
-                    break
+
+            if update:
+                break
 
     # Skip black-listed fields if ignored_fields is set.
     elif options.ignored_fields is not None:
@@ -77,7 +95,7 @@ def _can_update(path: tuple[str, ...], left_value: Any, right_value: Any, option
                     update = False
                     break
             else:
-                if path[-1] == deny:
+                if path[0] == deny:
                     update = False
                     break
 
@@ -86,15 +104,17 @@ def _can_update(path: tuple[str, ...], left_value: Any, right_value: Any, option
 
     return update
 
+
 MergeResult = list[tuple[str, ...]]
+
 
 def merge(
     left: DefinitionPart,
     right: DefinitionPart,
     overwrite: Optional[bool] = None,
     *,
-    allowed_fields: Optional[list[str | tuple[str, ...]]] = None,
-    ignored_fields: Optional[list[str | tuple[str, ...]]] = None,
+    allowed_fields: Optional[FieldList] = None,
+    ignored_fields: Optional[FieldList] = None,
     options: Optional[MergeOptions] = None,
     trail: tuple[str, ...] = tuple(),
 ) -> MergeResult:
@@ -114,7 +134,6 @@ def merge(
     if ignored_fields is not None:
         options.ignored_fields = ignored_fields
 
-
     # Now for the money: iterate over all attributes in the left definition and
     # update where necessary.
     for attr, _ in get_type_hints(left).items():
@@ -128,7 +147,7 @@ def merge(
 
             # Recursively merge dictionaries of str => DefinitionPart
             #########################################################
-            # The next 10 lines or so are all to confirm, at runtime, that we're working with 
+            # The next 10 lines or so are all to confirm, at runtime, that we're working with
             # hydrated dictionaries of dict[str, DefinitionPart]. When this is true, we will
             # recursively merge each item in the dictionary.
             #
@@ -144,21 +163,27 @@ def merge(
                     k2 = next(iter(right_value.keys()))
                     v2 = right_value[k2]
 
-                    if isinstance(v1, DefinitionPart) and isinstance(v2, DefinitionPart) and isinstance(k1, str) and isinstance(k2, str):
+                    if (
+                        isinstance(v1, DefinitionPart)
+                        and isinstance(v2, DefinitionPart)
+                        and isinstance(k1, str)
+                        and isinstance(k2, str)
+                    ):
                         # We've confirmed that these dictionaries are dict[str, DefinitionPart].
                         # Now we can recursively merge each item in the dictionary.
                         simple = False
                         left_value = cast(dict[str, DefinitionPart], left_value)
                         right_value = cast(dict[str, DefinitionPart], right_value)
-                    
-                        for key, value in right_value.items(): 
-                            if _can_update(path + (key,), left_value.get(key, None), value, options):
-                                if key not in left_value:
+
+                        for key, value in right_value.items():
+                            next_path = path + (key,)
+                            if key not in left_value:
+                                if options.add_dict_items and _can_update(next_path, None, value, options):
                                     left_value[key] = value
-                                    results.append(path + (key,))
-                                else:
-                                    results += merge(left_value[key], value, options=options, trail=(path + (key,)))
-                
+                                    results.append(next_path)
+                            else:
+                                results += merge(left_value[key], value, options=options, trail=next_path)
+
             # Merge DefinitionPart objects (OCSF complex types)
             ###################################################
             # If both values are DefinitionPart objects, we'll recursively merge
@@ -174,7 +199,7 @@ def merge(
             # objects (OCSF complex types), or cases where one side is a
             # DefinitionPart and the other is None, merge the values according
             # to the options.
-            # 
+            #
             if simple and _can_update(path, left_value, right_value, options):
                 setattr(left, attr, right_value)
                 results.append(path)

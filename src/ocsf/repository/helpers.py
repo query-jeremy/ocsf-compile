@@ -125,21 +125,21 @@ def categoryless(*args: Pathlike) -> str:
     return as_path(*args)
 
 
-def expected_defn(*path_parts: Pathlike) -> type[AnyDefinition]:
+def path_defn_t(*path_parts: Pathlike) -> type[AnyDefinition]:
     path = sanitize_path(*path_parts)
     parts = PurePath(path).parts
 
     match parts:
-        case (RepoPaths.OBJECTS.value, *_):
+        case (RepoPaths.OBJECTS.value, *_, _):
             return ObjectDefn
-        case (RepoPaths.EVENTS.value, *_):
+        case (RepoPaths.EVENTS.value, *_, _):
             return EventDefn
-        case (RepoPaths.INCLUDES.value, *_):
+        case (RepoPaths.INCLUDES.value, *_, _):
             return IncludeDefn
-        case (RepoPaths.PROFILES.value, *_):
+        case (RepoPaths.PROFILES.value, *_, _):
             return ProfileDefn
-        case (RepoPaths.EXTENSIONS.value, *_):
-            return expected_defn(*parts[2:])
+        case (RepoPaths.EXTENSIONS.value, *_, _):
+            return path_defn_t(*parts[2:])
         case _:
             ...
 

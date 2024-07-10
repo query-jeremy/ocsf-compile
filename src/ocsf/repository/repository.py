@@ -1,22 +1,29 @@
 from dataclasses import dataclass
-from typing import Generic, Optional, Iterable
+from pathlib import PurePath
+from typing import Optional, Iterable
 
-from .helpers import RepoPath
-from .definitions import ObjectDefn, DefinitionT, AnyDefinition
+from .helpers import RepoPath, RepoPaths
+from .definitions import AnyDefinition
 
 
 @dataclass
-class DefinitionFile(Generic[DefinitionT]):
-    path: str
+class DefinitionFile:
+    path: RepoPath
     raw_data: Optional[str] = None
-    data: Optional[DefinitionT] = None
+    data: Optional[AnyDefinition] = None
+
+    def short_name(self) -> str:
+        return PurePath(self.path).stem
 
 
 class Repository:
-    def __init__(self):
-        self._contents: dict[RepoPath, DefinitionFile[AnyDefinition]] = {}
+    def __init__(self, contents: Optional[dict[RepoPath, DefinitionFile]] = None):
+        if contents is not None:
+            self._contents = contents
+        else:
+            self._contents: dict[RepoPath, DefinitionFile] = {}
 
-    def __getitem__(self, path: RepoPath) -> DefinitionFile[AnyDefinition]:
+    def __getitem__(self, path: RepoPath) -> DefinitionFile:
         return self._contents[path]
 
     def __delitem__(self, path: RepoPath) -> None:
@@ -25,14 +32,27 @@ class Repository:
     def __contains__(self, path: RepoPath) -> bool:
         return path in self._contents
 
-    def __iter__(self) -> Iterable[str]:
-        yield from self._contents.keys()
-
     def __len__(self) -> int:
         return len(self._contents)
 
-    def __setitem__(self, path: RepoPath, file: DefinitionFile[AnyDefinition]) -> None:
+    def __setitem__(self, path: RepoPath, file: DefinitionFile) -> None:
+        file.path = path
         self._contents[path] = file
-        # TODO: build reference of type short name, type short name + ext to path
 
-    def object(self, name: str) -> list[DefinitionFile[ObjectDefn]]: ...
+    def files(self) -> Iterable[DefinitionFile]:
+        yield from self._contents.values()
+
+    def paths(self) -> Iterable[RepoPath]:
+        yield from self._contents.keys()
+
+    def extensions(self) -> Iterable[str]:
+        extns: set[str] = set()
+        for path in self._contents:
+            if path.startswith(RepoPaths.EXTENSIONS.value):
+                extns.add(PurePath(path).parts[1])
+        yield from extns
+
+    def profiles(self) -> Iterable[str]:
+        for path in self._contents:
+            if path.startswith(RepoPaths.PROFILES.value):
+                yield PurePath(path).stem

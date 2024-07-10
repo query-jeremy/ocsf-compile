@@ -2,7 +2,6 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Optional, TypeVar
 
-# TODO verify modeling of $include
 
 IncludeTarget = str | list[str]
 
@@ -54,7 +53,7 @@ class TypeDefn(DefinitionPart):
 
 @dataclass
 class DictionaryTypesDefn(DefinitionPart):
-    attributes: Optional[dict[str, TypeDefn]] = None
+    attributes: Optional[dict[str, TypeDefn | IncludeTarget]] = None
     caption: Optional[str] = None
     description: Optional[str] = None
 
@@ -83,7 +82,7 @@ class DictionaryDefn(DefinitionData):
     name: Optional[str] = None
     caption: Optional[str] = None
     description: Optional[str] = None
-    attributes: Optional[dict[str, AttrDefn]] = None
+    attributes: Optional[dict[str, AttrDefn | IncludeTarget]] = None
     types: Optional[DictionaryTypesDefn] = None
 
 
@@ -100,7 +99,7 @@ class ObjectDefn(DefinitionData):
     profiles: Optional[list[str]] = None
     constraints: Optional[dict[str, list[str]]] = None
     deprecated: Optional[DeprecationInfoDefn] = None
-    include: Optional[IncludeTarget] = None
+    include_: Optional[IncludeTarget] = None
 
 
 @dataclass
@@ -118,7 +117,7 @@ class EventDefn(DefinitionData):
     associations: Optional[dict[str, list[str]]] = None
     constraints: Optional[dict[str, list[str]]] = None
     deprecated: Optional[DeprecationInfoDefn] = None
-    include: Optional[IncludeTarget] = None
+    include_: Optional[IncludeTarget] = None
 
 
 @dataclass
@@ -170,7 +169,7 @@ class CategoryDefn(DefinitionPart):
 class CategoriesDefn(DefinitionData):
     """A list of categories."""
 
-    attributes: Optional[dict[str, CategoryDefn]] = None
+    attributes: Optional[dict[str, CategoryDefn | IncludeTarget]] = None
     caption: Optional[str] = None
     description: Optional[str] = None
     name: Optional[str] = None
@@ -180,3 +179,7 @@ DefinitionT = TypeVar("DefinitionT", bound=DefinitionData, covariant=True)
 AnyDefinition = (
     ObjectDefn | EventDefn | ProfileDefn | ExtensionDefn | DictionaryDefn | IncludeDefn | CategoriesDefn | VersionDefn
 )
+
+DefnWithName = ObjectDefn | EventDefn | ExtensionDefn
+DefnWithAttrs = ObjectDefn | EventDefn | ProfileDefn | DictionaryDefn | IncludeDefn
+DefnWithInclude = ObjectDefn | EventDefn
