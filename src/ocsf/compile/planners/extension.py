@@ -5,7 +5,7 @@ from ..protoschema import ProtoSchema
 from ..options import CompilationOptions
 from ..merge import merge, MergeResult
 from .planner import Operation, Planner, Analysis
-from ocsf.repository import DefinitionFile, extension, extensionless
+from ocsf.repository import DefinitionFile, extension, extensionless, ObjectDefn, EventDefn
 
 
 @dataclass(eq=True, frozen=True)
@@ -57,6 +57,8 @@ class ExtensionCopyOp(Operation):
 
         source = schema[self.prerequisite]
         assert source.data is not None
+        if isinstance(source.data, ObjectDefn) or isinstance(source.data, EventDefn):
+            source.data.src_extension = extension(self.prerequisite)
 
         schema[self.target] = deepcopy(source)
         dest = schema[self.target]

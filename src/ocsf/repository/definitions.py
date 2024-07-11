@@ -100,6 +100,7 @@ class ObjectDefn(DefinitionData):
     constraints: Optional[dict[str, list[str]]] = None
     deprecated: Optional[DeprecationInfoDefn] = None
     include_: Optional[IncludeTarget] = None
+    src_extension: Optional[str] = None
 
 
 @dataclass
@@ -118,6 +119,7 @@ class EventDefn(DefinitionData):
     constraints: Optional[dict[str, list[str]]] = None
     deprecated: Optional[DeprecationInfoDefn] = None
     include_: Optional[IncludeTarget] = None
+    src_extension: Optional[str] = None
 
 
 @dataclass

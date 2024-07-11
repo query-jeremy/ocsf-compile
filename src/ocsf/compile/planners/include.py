@@ -5,6 +5,7 @@ from typing import Optional
 from ..protoschema import ProtoSchema
 from ..merge import merge, MergeResult, FieldList
 from .planner import Operation, Planner, Analysis
+
 from ocsf.repository import (
     DefinitionFile,
     DefnWithInclude,

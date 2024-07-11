@@ -8,7 +8,9 @@ from .planners.planner import Operation, Planner
 from .planners.extension import ExtensionMergePlanner, ExtensionCopyPlanner
 from .planners.extends import ExtendsPlanner
 from .planners.include import IncludePlanner
+from .planners.profile import ProfilePlanner
 from .planners.dictionary import DictionaryPlanner
+from .planners.uid import UidPlanner
 from .merge import MergeResult
 
 FileOperations = dict[RepoPath, list[Operation]]
@@ -21,22 +23,23 @@ CompilationMutations = dict[RepoPath, FileMutations]
 
 class Compilation:
     def __init__(self, repo: Repository, options: CompilationOptions = CompilationOptions()):
-        self.operations: Optional[CompilationOperations] = None
-        self.plan: Optional[CompilationPlan] = None
-        self.mutations: Optional[CompilationMutations] = None
-        self.schema: Optional[OcsfSchema] = None
+        self._operations: Optional[CompilationOperations] = None
+        self._plan: Optional[CompilationPlan] = None
+        self._mutations: Optional[CompilationMutations] = None
+        self._schema: Optional[OcsfSchema] = None
         self._repo = repo
-        self._schema = ProtoSchema(repo)
+        self._proto = ProtoSchema(repo)
 
         # [phase: [planner, planner, ...]]
         self._planners: list[list[Planner]] = [
             [
-                IncludePlanner(self._schema, options),
-                ExtendsPlanner(self._schema, options),
-                ExtensionMergePlanner(self._schema, options),
+                IncludePlanner(self._proto, options),
+                ExtendsPlanner(self._proto, options),
+                ExtensionMergePlanner(self._proto, options),
             ],
-            [DictionaryPlanner(self._schema, options)],
-            [ExtensionCopyPlanner(self._schema, options)],
+            [UidPlanner(self._proto, options)],
+            [ProfilePlanner(self._proto, options), DictionaryPlanner(self._proto, options)],
+            [ExtensionCopyPlanner(self._proto, options)],
         ]
 
     def analyze(self) -> CompilationOperations:
@@ -57,13 +60,16 @@ class Compilation:
 
             operations.append(found)
 
-        self.operations = operations
+        self._operations = operations
         return operations
 
-    def order(self) -> CompilationPlan:
-        if self.operations is None:
+    def order(self, operations: Optional[CompilationOperations] = None) -> CompilationPlan:
+        if operations is not None:
+            self._operations = operations
+
+        if self._operations is None:
             self.analyze()
-            assert self.operations is not None
+            assert self._operations is not None
 
         plan: CompilationPlan = []
 
@@ -76,34 +82,37 @@ class Compilation:
                     follow(op.prerequisite, phase, planned)
                 plan.append(op)
 
-        for phase in self.operations:
+        for phase in self._operations:
             planned: set[RepoPath] = set()
             for path, _ in phase.items():
                 follow(path, phase, planned)
 
-        self.plan = plan
+        self._plan = plan
         return plan
 
-    def compile(self) -> CompilationMutations:
-        if self.plan is None:
+    def compile(self, plan: Optional[CompilationPlan] = None) -> CompilationMutations:
+        if plan is not None:
+            self._plan = plan
+
+        if self._plan is None:
             self.order()
-            assert self.plan is not None
+            assert self._plan is not None
 
         mutations: CompilationMutations = {}
-        for op in self.plan:
+        for op in self._plan:
             if op.target not in mutations:
                 mutations[op.target] = []
-            mutations[op.target].append((op, op.apply(self._schema)))
+            mutations[op.target].append((op, op.apply(self._proto)))
 
-        self.mutations = mutations
+        self._mutations = mutations
         return mutations
 
     def build(self) -> OcsfSchema:
-        if self.mutations is None:
+        if self._mutations is None:
             self.compile()
-            assert self.mutations is not None
+            assert self._mutations is not None
 
-        if self.schema is None:
-            self.schema = self._schema.schema()
+        if self._schema is None:
+            self._schema = self._proto.schema()
 
-        return self.schema
+        return self._schema

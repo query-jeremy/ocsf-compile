@@ -7,10 +7,6 @@
     "autoscale_uid": {
       "requirement": "optional"
     },
-    "boot_time": {
-      "description": "The time the system was booted.",
-      "requirement": "optional"
-    },
     "created_time": {
       "description": "The time when the device was known to have been created.",
       "requirement": "optional"
@@ -21,8 +17,7 @@
       "requirement": "optional"
     },
     "domain": {
-      "description": "The network domain where the device resides. For example: <code>work.example.com</code>.",
-      "requirement": "optional"
+      "description": "The network domain where the device resides. For example: <code>work.example.com</code>."
     },
     "first_seen_time": {
       "description": "The initial discovery time of the device.",
@@ -33,8 +28,7 @@
       "requirement": "optional"
     },
     "hostname": {
-      "description": "The device hostname.",
-      "requirement": "recommended"
+      "description": "The device hostname."
     },
     "hypervisor": {
       "requirement": "optional"
@@ -47,8 +41,7 @@
       "requirement": "optional"
     },
     "ip": {
-      "description": "The device IP address, in either IPv4 or IPv6 format.",
-      "requirement": "optional"
+      "description": "The device IP address, in either IPv4 or IPv6 format."
     },
     "is_compliant": {
       "requirement": "optional"
@@ -67,16 +60,14 @@
       "requirement": "optional"
     },
     "location": {
-      "description": "The geographical location of the device.",
-      "requirement": "optional"
+      "description": "The geographical location of the device."
     },
     "modified_time": {
       "description": "The time when the device was last known to have been modified.",
       "requirement": "optional"
     },
     "name": {
-      "description": "The alternate device name, ordinarily as assigned by an administrator. <p><b>Note:</b> The <b>Name</b> could be any other string that helps to identify the device, such as a phone number; for example <code>310-555-1234</code>.</p>",
-      "requirement": "optional"
+      "description": "The alternate device name, ordinarily as assigned by an administrator. <p><b>Note:</b> The <b>Name</b> could be any other string that helps to identify the device, such as a phone number; for example <code>310-555-1234</code>.</p>"
     },
     "network_interfaces": {
       "requirement": "optional"
@@ -102,20 +93,17 @@
       "requirement": "optional"
     },
     "type": {
-      "description": "The device type. For example: <code>unknown</code>, <code>server</code>, <code>desktop</code>, <code>laptop</code>, <code>tablet</code>, <code>mobile</code>, <code>virtual</code>, <code>browser</code>, or <code>other</code>.",
-      "requirement": "recommended"
+      "description": "The device type. For example: <code>unknown</code>, <code>server</code>, <code>desktop</code>, <code>laptop</code>, <code>tablet</code>, <code>mobile</code>, <code>virtual</code>, <code>browser</code>, or <code>other</code>."
     },
     "type_id": {
       "description": "The device type ID.",
       "requirement": "required"
     },
     "uid": {
-      "description": "The unique identifier of the device. For example the Windows TargetSID or AWS EC2 ARN.",
-      "requirement": "recommended"
+      "description": "The unique identifier of the device. For example the Windows TargetSID or AWS EC2 ARN."
     },
     "uid_alt": {
-      "description": "An alternate unique identifier of the device if any. For example the ActiveDirectory DN.",
-      "requirement": "optional"
+      "description": "An alternate unique identifier of the device if any. For example the ActiveDirectory DN."
     }
   }
 }

@@ -35,26 +35,3 @@ def find_dependency(repo: Repository, subject: str, relative_to: Optional[RepoPa
                     return k
 
     return None
-
-
-def find_base(repo: Repository, subject: str, relative_to: RepoPath) -> RepoPath | None:
-    rel_path = PurePath(relative_to)
-
-    idx = rel_path.parts.index(RepoPaths.OBJECTS.value)
-    if idx == -1:
-        idx = rel_path.parts.index(RepoPaths.EVENTS.value)
-    prefix = as_path(*rel_path.parts[:idx])
-
-    for file in repo.files():
-        if file.path.startswith(prefix):
-            subj_path = PurePath(file.path)
-            if subj_path.stem == subject:
-                return file.path
-            elif isinstance(file.data, ObjectDefn) or isinstance(file.data, EventDefn):
-                if file.data.name is not None and file.data.name == subject:
-                    return file.path
-
-    if extension(relative_to) is not None:
-        return find_base(repo, subject, extensionless(relative_to))
-
-    return None

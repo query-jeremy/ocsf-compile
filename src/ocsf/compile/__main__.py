@@ -28,5 +28,5 @@ for o in order:
 
 print("COMPILE")
 pprint(compile["objects/databucket.json"])
-#pprint(compiler._schema["objects/databucket.json"])
+# pprint(compiler._schema["objects/databucket.json"])
 pprint(compiler.build())

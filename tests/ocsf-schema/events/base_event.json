@@ -5,16 +5,14 @@
   "name": "base_event",
   "profiles": [
     "cloud",
-    "datetime",
-    "osint"
+    "datetime"
   ],
   "attributes": {
     "$include": [
       "includes/classification.json",
       "includes/occurrence.json",
       "profiles/cloud.json",
-      "profiles/datetime.json",
-      "profiles/osint.json"
+      "profiles/datetime.json"
     ],
     "enrichments": {
       "group": "context",

@@ -41,8 +41,7 @@
     },
     "subject": {
       "caption": "Subject",
-      "description": "The email header Subject value, as defined by RFC 5322.",
-      "requirement": "recommended"
+      "description": "The email header Subject value, as defined by RFC 5322."
     },
     "to": {
       "requirement": "required"

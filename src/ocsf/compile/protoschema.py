@@ -88,11 +88,12 @@ class ProtoSchema:
                     assert file.data.name is not None
                     data = asdict(file.data)
                     _remove_nones(data)
-                    
+
                     schema.classes[file.data.name] = dacite.from_dict(OcsfEvent, data)
 
             except Exception as e:
                 from pprint import pprint
+
                 pprint(file.data)
                 raise ValueError(f"Error processing {file.path}: {e}") from e
 

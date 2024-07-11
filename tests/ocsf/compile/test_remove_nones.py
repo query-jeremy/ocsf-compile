@@ -1,6 +1,5 @@
-
-
 from ocsf.compile.protoschema import _remove_nones
+
 
 def test_remove_nones():
     d = {

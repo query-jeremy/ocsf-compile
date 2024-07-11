@@ -30,10 +30,6 @@
       "group": "primary",
       "requirement": "required"
     },
-    "ja4_fingerprint_list": {
-      "group": "context",
-      "requirement": "optional"
-    },
     "proxy": {
       "group": "primary",
       "requirement": "recommended"
@@ -44,8 +40,7 @@
       "requirement": "required"
     },
     "tls": {
-      "group": "context",
-      "requirement": "optional"
+      "group": "primary"
     },
     "traffic": {
       "group": "primary",

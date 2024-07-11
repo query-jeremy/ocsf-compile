@@ -20,9 +20,7 @@
         "log_version": {
             "requirement": "optional"
         },
-        "logged_time": {
-            "requirement": "recommended"
-        },
+        "logged_time": {},
         "name": {
             "description": "The name of the logging product instance.",
             "requirement": "recommended"

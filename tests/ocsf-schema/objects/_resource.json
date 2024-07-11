@@ -19,14 +19,16 @@
       "requirement": "optional"
     },
     "name": {
-      "description": "The name of the resource."
+      "description": "The name of the resource.",
+      "requirement": "optional"
     },
     "type": {
       "description": "The resource type as defined by the event source.",
       "requirement": "optional"
     },
     "uid": {
-      "description": "The unique identifier of the resource."
+      "description": "The unique identifier of the resource.",
+      "requirement": "optional"
     }
   }
 }

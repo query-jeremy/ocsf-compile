@@ -15,36 +15,16 @@
       "requirement": "required",
       "enum": {
         "1": {
-          "caption": "Install",
-          "description": "Install the application."
+          "caption": "Install"
         },
         "2": {
-          "caption": "Remove",
-          "description": "Remove the application."
+          "caption": "Remove"
         },
         "3": {
-          "caption": "Start",
-          "description": "Start the application."
+          "caption": "Start"
         },
         "4": {
-          "caption": "Stop",
-          "description": "Stop the application."
-        },
-        "5": {
-          "caption": "Restart",
-          "description": "Restart the application."
-        },
-        "6": {
-          "caption": "Enable",
-          "description": "Enable the application."
-        },
-        "7": {
-          "caption": "Disable",
-          "description": "Disable the application."
-        },
-        "8": {
-          "caption": "Update",
-          "description": "Update the application."
+          "caption": "Stop"
         }
       }
     },

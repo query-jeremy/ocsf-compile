@@ -78,8 +78,7 @@
       "description": "The attempted authentication is over a remote connection."
     },
     "logon_process": {
-      "group": "context",
-      "requirement": "optional"
+      "group": "context"
     },
     "logon_type": {
       "group": "primary",
