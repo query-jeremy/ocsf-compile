@@ -48,21 +48,19 @@ files = [
 
 [[package]]
 name = "ocsf-lib"
-version = "0.2.1"
+version = "0.3.0"
 description = "Tools for working with the OCSF schema"
 optional = false
-python-versions = "^3.11"
-files = []
-develop = true
+python-versions = "<4.0,>=3.11"
+files = [
+    {file = "ocsf_lib-0.3.0-py3-none-any.whl", hash = "sha256:ffdaabdd5eb8c954b98d315b36f75a2745bf4540335bbde41e5b45d7aa0a249d"},
+    {file = "ocsf_lib-0.3.0.tar.gz", hash = "sha256:b0f614b4f6dc085d83febf114134df3392f184798895d553930e4c8cac6bedde"},
+]
 
 [package.dependencies]
-dacite = "^1.8.1"
-semver = "^3.0.2"
-termcolor = "^2.4.0"
-
-[package.source]
-type = "directory"
-url = "../ocsf-lib-py"
+dacite = ">=1.8.1,<2.0.0"
+semver = ">=3.0.2,<4.0.0"
+termcolor = ">=2.4.0,<3.0.0"
 
 [[package]]
 name = "packaging"
@@ -92,13 +90,13 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "pyright"
-version = "1.1.370"
+version = "1.1.371"
 description = "Command line wrapper for pyright"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyright-1.1.370-py3-none-any.whl", hash = "sha256:fc721601e480a69989775bfc210534a6ca0110ebd0c065244a8d3a151294fc61"},
-    {file = "pyright-1.1.370.tar.gz", hash = "sha256:d0d559d506fc41e3297f721aaa05a1b9f06beda5acc9ac64ca371ce94c28f960"},
+    {file = "pyright-1.1.371-py3-none-any.whl", hash = "sha256:cce52e42ff73943243e7e5e24f2a59dee81b97d99f4e3cf97370b27e8a1858cd"},
+    {file = "pyright-1.1.371.tar.gz", hash = "sha256:777b508b92dda2db476214c400ce043aad8d8f3dd0e10d284c96e79f298308b5"},
 ]
 
 [package.dependencies]
@@ -199,4 +197,4 @@ tests = ["pytest", "pytest-cov"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "9792ab086d1b6bd7d329f78555e4a1731ff88c35b3b5ce8f29690b996540b4f6"
+content-hash = "e76d40bcf6424f8791215839c3a972b6fb078ff0d8e861899deefb95752b9a09"
