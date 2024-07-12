@@ -1,3 +1,4 @@
+from ocsf.schema import to_json
 from ocsf.repository import read_repo
 
 from .compiler import Compilation
@@ -8,7 +9,9 @@ PATH = "/Users/jfisher/Source/ocsf/ocsf-schema"
 repo = read_repo(PATH, preserve_raw_data=True)
 compiler = Compilation(repo)
 
+print(to_json(compiler.build()))
 
+exit()
 from pprint import pprint
 
 analysis = compiler.analyze()

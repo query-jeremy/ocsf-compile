@@ -4,11 +4,13 @@ from copy import deepcopy
 from dataclasses import asdict
 from typing import Any, cast
 
-from ocsf.schema import OcsfSchema, OcsfObject, OcsfEvent
+from ocsf.schema import OcsfSchema, OcsfObject, OcsfEvent, OcsfType
 from ocsf.repository import (
     Repository,
     ObjectDefn,
     EventDefn,
+    SpecialFiles,
+    TypeDefn,
     ExtensionDefn,
     ProfileDefn,
     DictionaryDefn,
@@ -91,11 +93,35 @@ class ProtoSchema:
 
                     schema.classes[file.data.name] = dacite.from_dict(OcsfEvent, data)
 
-            except Exception as e:
-                from pprint import pprint
+                elif file.path == SpecialFiles.DICTIONARY:
+                    #types: dict[str, OcsfType] = field(default_factory=dict)
+                    assert file.data is not None
+                    assert isinstance(file.data, DictionaryDefn)
+                    assert file.data.types is not None
+                    assert isinstance(file.data.types.attributes, dict)
+                    for k, v in file.data.types.attributes.items():
+                        if isinstance(v, TypeDefn):
+                            data = asdict(v)
+                            _remove_nones(data)
+                            schema.types[k] = dacite.from_dict(OcsfType, data)
 
-                pprint(file.data)
+            except Exception as e:
                 raise ValueError(f"Error processing {file.path}: {e}") from e
+
+        # Build type_name, object_name, and object_type.
+        # These are really only needed by the OCSF server internals, but we're trying
+        # to be as faithful to the server's schema as possible.
+        for record in list(schema.classes.values()) + list(schema.objects.values()):
+            for attr in record.attributes.values():
+                if attr.type in schema.objects:
+                    attr.object_name = schema.objects[attr.type].caption
+                    attr.object_type = attr.type
+
+                elif attr.type in schema.types:
+                    attr.type_name = schema.types[attr.type].caption
+
+                else:
+                    raise ValueError(f"Unknown type {attr.type} in {record.name}")
 
         if "base" in schema.classes:
             schema.base_event = schema.classes["base"]

@@ -29,7 +29,7 @@ def _find_base(repo: Repository, subject: str, relative_to: RepoPath) -> RepoPat
         idx = rel_path.parts.index(RepoPaths.OBJECTS.value)
     except ValueError:
         idx = rel_path.parts.index(RepoPaths.EVENTS.value)
-    prefix = as_path(*rel_path.parts[:idx])
+    prefix = as_path(*rel_path.parts[:idx + 1])
 
     for file in repo.files():
         if file.path.startswith(prefix):

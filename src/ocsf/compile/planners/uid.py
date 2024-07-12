@@ -16,7 +16,6 @@ from ocsf.repository import (
     AttrDefn,
 )
 
-
 @dataclass(eq=True, frozen=True)
 class UidOp(Operation):
     def apply(self, schema: ProtoSchema) -> MergeResult:
@@ -61,9 +60,10 @@ class UidOp(Operation):
 
         # Calculate the Class UID and build the class_uid enum
         class_uid = (extn_uid * 100000) + (cat_uid * 1000) + defn.uid
-        enums.attributes["class_uid"] = AttrDefn(
-            enum={str(class_uid): EnumMemberDefn(caption=defn.caption, description=defn.description)}
-        )
+        attr = AttrDefn()
+        attr.enum = {}
+        attr.enum[str(class_uid)] = EnumMemberDefn(caption=defn.caption, description=defn.description) 
+        enums.attributes["class_uid"] = attr
 
         # Build Activity IDs and the Activity ID enum
         if (
@@ -72,16 +72,17 @@ class UidOp(Operation):
             and isinstance(defn.attributes["activity_id"], AttrDefn)
             and defn.attributes["activity_id"].enum is not None
         ):
-            ...
-            enums.attributes["type_uid"] = AttrDefn()
-            enums.attributes["type_uid"].enum = {}
+            attr = AttrDefn()
+            attr.enum = {}
 
             for key, value in defn.attributes["activity_id"].enum.items():
                 type_uid = (class_uid * 100) + int(key)
-                enums.attributes["type_uid"].enum[str(type_uid)] = EnumMemberDefn(
-                    caption=value.caption, description=value.description
-                )
+                attr.enum[str(type_uid)] = EnumMemberDefn(caption=value.caption, description=value.description)
 
+            enums.attributes["type_uid"] = attr
+
+        #from pprint import pprint
+        #pprint(enums.attributes)
         return merge(defn, enums, allowed_fields=[("attributes", "category_uid"), ("attributes", "class_uid"), ("attributes", "type_uid")])
 
 

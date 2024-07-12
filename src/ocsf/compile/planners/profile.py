@@ -5,11 +5,11 @@ from ..protoschema import ProtoSchema
 from ..options import CompilationOptions
 from ..merge import MergeResult
 from .planner import Operation, Planner, Analysis
-from ocsf.repository import DefinitionFile, ProfileDefn, ObjectDefn, EventDefn, as_path, extension, RepoPaths
+from ocsf.repository import DefinitionFile, ProfileDefn, ObjectDefn, EventDefn, as_path, extension, RepoPaths, AttrDefn
 
 
 @dataclass(eq=True, frozen=True)
-class ProfileOp(Operation):
+class ExcludeProfileOp(Operation):
     def apply(self, schema: ProtoSchema) -> MergeResult:
         result: MergeResult = []
 
@@ -35,7 +35,43 @@ class ProfileOp(Operation):
         return result
 
     def __str__(self):
-        return f"Profile {self.target} <- {self.prerequisite}"
+        return f"Exclude Profile {self.target} <- {self.prerequisite}"
+
+
+@dataclass(eq=True, frozen=True)
+class MarkProfileOp(Operation):
+
+    def apply(self, schema: ProtoSchema) -> MergeResult:
+        result: MergeResult = []
+
+        assert self.prerequisite is not None
+
+        target = schema[self.target]
+        assert target.data is not None
+        assert isinstance(target.data, ObjectDefn) or isinstance(target.data, EventDefn)
+
+        if target.data.attributes is None:
+            return result
+
+        profile = schema[self.prerequisite]
+        profile_name = PurePath(self.prerequisite).stem
+        assert profile.data is not None
+        assert isinstance(profile.data, ProfileDefn)
+
+        if profile.data.attributes is not None:
+            for attr in profile.data.attributes:
+                if attr in target.data.attributes:
+                    defn = target.data.attributes[attr]
+                    if isinstance(defn, AttrDefn):
+                        result.append(("attributes", attr, "profile"))
+                        defn.profile = profile_name
+
+
+        return result
+
+    def __str__(self):
+        return f"Mark Profile {self.target} <- {self.prerequisite}"
+
 
 def _find_profile(schema: ProtoSchema, profile_ref: str, relative_to: str) -> str | None:
     # extn/profile_name
@@ -71,12 +107,15 @@ class ProfilePlanner(Planner):
 
         if isinstance(input.data, ObjectDefn) or isinstance(input.data, EventDefn):
             if input.data.profiles is not None:
-                # profile will be something like 'profiles/xyz.json'. As a path
-                # reference it follows the same rules as includes – it may refer
-                # to a path in the current extension, or it may refer to a path
-                # in the core.
+                # profile_ref will be in one of the following formats:
+                #   extension/profile_name
+                #   profiles/profile_name
+                #   profiles/profile_name.json
                 for profile_ref in input.data.profiles:
                     path = _find_profile(self._schema, profile_ref, input.path)
-                    return ProfileOp(input.path, path)
+                    if PurePath(profile_ref).stem in self._options.profiles and path is not None:
+                        return MarkProfileOp(input.path, path)
+                    else:
+                        return ExcludeProfileOp(input.path, path)
 
         return None
