@@ -129,7 +129,7 @@ class IncludeDefn(DefinitionData):
     caption: Optional[str] = None
     description: Optional[str] = None
     attributes: Optional[dict[str, AttrDefn | IncludeTarget]] = None
-    annotations: Optional[dict[str, str]] = None
+    annotations: Optional[AttrDefn] = None
 
 
 @dataclass
@@ -142,7 +142,7 @@ class ProfileDefn(DefinitionData):
     description: Optional[str] = None
     attributes: Optional[dict[str, AttrDefn | IncludeTarget]] = None
     deprecated: Optional[DeprecationInfoDefn] = None
-    annotations: Optional[dict[str, str]] = None
+    annotations: Optional[AttrDefn] = None
 
 
 @dataclass
@@ -185,3 +185,4 @@ AnyDefinition = (
 DefnWithName = ObjectDefn | EventDefn | ExtensionDefn
 DefnWithAttrs = ObjectDefn | EventDefn | ProfileDefn | DictionaryDefn | IncludeDefn
 DefnWithInclude = ObjectDefn | EventDefn
+DefnWithAnnotations = ProfileDefn | IncludeDefn

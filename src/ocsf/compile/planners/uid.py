@@ -16,6 +16,7 @@ from ocsf.repository import (
     AttrDefn,
 )
 
+
 @dataclass(eq=True, frozen=True)
 class UidOp(Operation):
     def apply(self, schema: ProtoSchema) -> MergeResult:
@@ -62,7 +63,7 @@ class UidOp(Operation):
         class_uid = (extn_uid * 100000) + (cat_uid * 1000) + defn.uid
         attr = AttrDefn()
         attr.enum = {}
-        attr.enum[str(class_uid)] = EnumMemberDefn(caption=defn.caption, description=defn.description) 
+        attr.enum[str(class_uid)] = EnumMemberDefn(caption=defn.caption, description=defn.description)
         enums.attributes["class_uid"] = attr
 
         # Build Activity IDs and the Activity ID enum
@@ -77,14 +78,25 @@ class UidOp(Operation):
 
             for key, value in defn.attributes["activity_id"].enum.items():
                 type_uid = (class_uid * 100) + int(key)
-                attr.enum[str(type_uid)] = EnumMemberDefn(caption=value.caption, description=value.description)
+                attr.enum[str(type_uid)] = EnumMemberDefn(
+                    caption=f"{defn.caption}: {value.caption}", description=value.description
+                )
 
             enums.attributes["type_uid"] = attr
 
-        #from pprint import pprint
-        #pprint(enums.attributes)
-        return merge(defn, enums, allowed_fields=[("attributes", "category_uid"), ("attributes", "class_uid"), ("attributes", "type_uid")])
+        # Remove any enum members that were inherited from base_event
+        if isinstance(defn.attributes, dict) and "class_uid" in defn.attributes and isinstance(defn.attributes["class_uid"], AttrDefn):
+            defn.attributes["class_uid"].enum = {}
+        if isinstance(defn.attributes, dict) and "category_uid" in defn.attributes and isinstance(defn.attributes["category_uid"], AttrDefn):
+            defn.attributes["category_uid"].enum = {}
+        if isinstance(defn.attributes, dict) and "type_uid" in defn.attributes and isinstance(defn.attributes["type_uid"], AttrDefn):
+            defn.attributes["type_uid"].enum = {}
 
+        return merge(
+            defn,
+            enums,
+            allowed_fields=[("attributes", "category_uid"), ("attributes", "class_uid"), ("attributes", "type_uid")],
+        )
 
     def __str__(self):
         return f"UIDs for {self.target}"

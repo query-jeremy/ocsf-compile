@@ -1,3 +1,10 @@
+"""Profile planner and operations for OCSF compiler.
+
+Profiles are defined in separate files and add attributes to objects and events.
+
+
+"""
+
 from dataclasses import dataclass
 from pathlib import PurePath
 
@@ -40,7 +47,6 @@ class ExcludeProfileOp(Operation):
 
 @dataclass(eq=True, frozen=True)
 class MarkProfileOp(Operation):
-
     def apply(self, schema: ProtoSchema) -> MergeResult:
         result: MergeResult = []
 
@@ -65,7 +71,6 @@ class MarkProfileOp(Operation):
                     if isinstance(defn, AttrDefn):
                         result.append(("attributes", attr, "profile"))
                         defn.profile = profile_name
-
 
         return result
 

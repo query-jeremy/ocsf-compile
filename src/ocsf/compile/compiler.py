@@ -5,6 +5,7 @@ from ocsf.repository import Repository, RepoPath
 from .options import CompilationOptions
 from .protoschema import ProtoSchema
 from .planners.planner import Operation, Planner
+from .planners.annotations import AnnotationPlanner
 from .planners.extension import ExtensionMergePlanner, ExtensionCopyPlanner
 from .planners.extends import ExtendsPlanner
 from .planners.include import IncludePlanner
@@ -33,6 +34,7 @@ class Compilation:
         # [phase: [planner, planner, ...]]
         self._planners: list[list[Planner]] = [
             [
+                AnnotationPlanner(self._proto, options),
                 IncludePlanner(self._proto, options),
                 ExtendsPlanner(self._proto, options),
                 ExtensionMergePlanner(self._proto, options),
@@ -102,7 +104,8 @@ class Compilation:
         for op in self._plan:
             if op.target not in mutations:
                 mutations[op.target] = []
-            mutations[op.target].append((op, op.apply(self._proto)))
+            result = op.apply(self._proto)
+            mutations[op.target].append((op, result))
 
         self._mutations = mutations
         return mutations

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import get_type_hints, cast, Optional, Any
 
@@ -19,6 +20,9 @@ class MergeOptions:
 
     add_dict_items: bool = True
     """Add missing dictionary items from right to left if True"""
+
+    copy: bool = True
+    """If True, always merge a copy of the right value rather than a reference"""
 
 
 def _can_update(path: tuple[str, ...], left_value: Any, right_value: Any, options: MergeOptions) -> bool:
@@ -143,6 +147,8 @@ def merge(
 
             left_value = getattr(left, attr)
             right_value = getattr(right, attr)
+            if options.copy:
+                right_value = deepcopy(right_value)
             simple = True
 
             # Recursively merge dictionaries of str => DefinitionPart

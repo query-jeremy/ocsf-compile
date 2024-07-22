@@ -15,6 +15,7 @@ from ocsf.repository import (
     ProfileDefn,
     DictionaryDefn,
     AnyDefinition,
+    VersionDefn,
     DefinitionFile,
     RepoPath,
     RepoPaths,
@@ -79,10 +80,11 @@ class ProtoSchema:
                     assert file.data is not None
                     assert isinstance(file.data, ObjectDefn)
                     assert file.data.name is not None
-                    data = asdict(file.data)
-                    _remove_nones(data)
+                    if not file.data.name.startswith("_"):
+                        data = asdict(file.data)
+                        _remove_nones(data)
 
-                    schema.objects[file.data.name] = dacite.from_dict(OcsfObject, data)
+                        schema.objects[file.data.name] = dacite.from_dict(OcsfObject, data)
 
                 elif file.path.startswith(RepoPaths.EVENTS.value):
                     assert file.data is not None
@@ -104,6 +106,12 @@ class ProtoSchema:
                             data = asdict(v)
                             _remove_nones(data)
                             schema.types[k] = dacite.from_dict(OcsfType, data)
+
+                elif file.path == SpecialFiles.VERSION:
+                    assert file.data is not None
+                    assert isinstance(file.data, VersionDefn)
+                    assert file.data.version is not None
+                    schema.version = file.data.version
 
             except Exception as e:
                 raise ValueError(f"Error processing {file.path}: {e}") from e

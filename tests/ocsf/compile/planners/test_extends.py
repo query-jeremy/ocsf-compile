@@ -1,4 +1,4 @@
-from ocsf.repository import Repository, DefinitionFile, ObjectDefn, AttrDefn, EventDefn 
+from ocsf.repository import Repository, DefinitionFile, ObjectDefn, AttrDefn, EventDefn
 from ocsf.compile.protoschema import ProtoSchema
 from ocsf.compile.options import CompilationOptions
 from ocsf.compile.planners.extends import ExtendsPlanner, ExtendsOp, _find_base
@@ -13,10 +13,12 @@ def get_repo():
         "events/network/network.json", data=EventDefn(extends="base", attributes={"b": AttrDefn(description="B!")})
     )
     repo["events/network/ssh_activity.json"] = DefinitionFile(
-        "events/network/ssh_activity.json", data=EventDefn(extends="network", attributes={"c": AttrDefn(description="C!")})
+        "events/network/ssh_activity.json",
+        data=EventDefn(extends="network", attributes={"c": AttrDefn(description="C!")}),
     )
     repo["extensions/win/events/network/cifs_activity.json"] = DefinitionFile(
-        "extensions/win/events/network/cifs_activity.json", data=EventDefn(extends="network", attributes={"d": AttrDefn(description="D!")})
+        "extensions/win/events/network/cifs_activity.json",
+        data=EventDefn(extends="network", attributes={"d": AttrDefn(description="D!")}),
     )
 
     return repo
@@ -35,7 +37,10 @@ def test_find_base():
     assert _find_base(repo, "base", "events/network/network.json") == "events/base.json"
     assert _find_base(repo, "base", "events/network/ssh_activity.json") == "events/base.json"
     assert _find_base(repo, "network", "events/network/ssh_activity.json") == "events/network/network.json"
-    assert _find_base(repo, "network", "extensions/win/events/network/cifs_activity.json") == "events/network/network.json"
+    assert (
+        _find_base(repo, "network", "extensions/win/events/network/cifs_activity.json") == "events/network/network.json"
+    )
+
 
 def test_analyze_positive():
     ps = get_schema()
@@ -53,4 +58,3 @@ def test_analyze_negative():
 
     op = planner.analyze(ps["events/base.json"])
     assert op is None
-
