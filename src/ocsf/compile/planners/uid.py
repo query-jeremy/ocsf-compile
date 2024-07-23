@@ -47,7 +47,6 @@ class UidOp(Operation):
         cats = schema[as_path(SpecialFiles.CATEGORIES)].data
         assert isinstance(cats, CategoriesDefn)
         if cats.attributes is None:
-            # should probably raise an error
             return []
 
         cat = cats.attributes.get(defn.category)
@@ -95,6 +94,7 @@ class UidOp(Operation):
         return merge(
             defn,
             enums,
+            overwrite=True,
             allowed_fields=[("attributes", "category_uid"), ("attributes", "class_uid"), ("attributes", "type_uid")],
         )
 

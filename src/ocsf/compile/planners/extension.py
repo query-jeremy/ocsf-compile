@@ -5,7 +5,7 @@ from ..protoschema import ProtoSchema
 from ..options import CompilationOptions
 from ..merge import merge, MergeResult
 from .planner import Operation, Planner, Analysis
-from ocsf.repository import DefinitionFile, extension, extensionless, ObjectDefn, EventDefn
+from ocsf.repository import DefinitionFile, extension, extensionless, ObjectDefn, EventDefn, as_path, RepoPaths, SpecialFiles, ExtensionDefn
 
 
 @dataclass(eq=True, frozen=True)
@@ -57,8 +57,17 @@ class ExtensionCopyOp(Operation):
 
         source = schema[self.prerequisite]
         assert source.data is not None
-        if isinstance(source.data, ObjectDefn) or isinstance(source.data, EventDefn):
-            source.data.src_extension = extension(self.prerequisite)
+
+        if not isinstance(source.data, ObjectDefn) and not isinstance(source.data, EventDefn):
+            return []
+
+        # Look up the source extension name from extension.json (because it may not match the directory)
+        extn_dir = extension(self.prerequisite)
+        assert extn_dir is not None
+        extn = schema[as_path(RepoPaths.EXTENSIONS, extn_dir, SpecialFiles.EXTENSION)]
+        assert isinstance(extn.data, ExtensionDefn)
+        assert extn.data.name is not None
+        source.data.src_extension = extn.data.name
 
         schema[self.target] = deepcopy(source)
         dest = schema[self.target]

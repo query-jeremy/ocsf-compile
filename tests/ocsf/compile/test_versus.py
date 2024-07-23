@@ -1,7 +1,7 @@
 import os
 
 from ocsf.util import get_schema
-from ocsf.compare import compare, ChangedSchema, NoChange, ChangedEvent
+from ocsf.compare import compare, ChangedSchema, NoChange, ChangedEvent, ChangedAttr, Removal, Addition
 from ocsf.compare.formatter import format
 from ocsf.repository import read_repo
 from ocsf.compile.compiler import Compilation
@@ -33,15 +33,62 @@ def test_versus():
 
     for name, event in diff.classes.items():
         fail = 0
-        if isinstance(event, ChangedEvent):
-            for attr, change in event.attributes.items():
-                if not attr.endswith("_dt") and not attr.endswith("_name"):
-                    if not isinstance(change, NoChange):
-                        print(name, attr, change)
+        if not isinstance(event, NoChange):
+            if isinstance(event, Removal):
+                print("REMOVED", name)
+                bad += 1
+            elif isinstance(event, Addition):
+                print("ADDED", name)
+                bad += 1
+            else:
+                assert isinstance(event, ChangedEvent)
+                for attr, change in event.attributes.items():
+                    failed = False
+                    if not attr.endswith("_dt") and not attr.endswith("_name"):
+                        if isinstance(change, NoChange):
+                            ok += 1
+                            break
+                        elif isinstance(change, ChangedAttr):
+                            if not isinstance(change.caption, NoChange):
+                                print(name, attr, "caption", change.caption)
+                                failed = True
+                            if not isinstance(change.description, NoChange):
+                                print(name, attr, "description", change.description)
+                                failed = True
+                            if not isinstance(change.observable, NoChange):
+                                print(name, attr, "observable", change.observable)
+                                failed = True
+                            if not isinstance(change.requirement, NoChange):
+                                print(name, attr, "requirement", change.requirement)
+                                failed = True
+                            if not isinstance(change.type, NoChange):
+                                print(name, attr, "type", change.type)
+                                failed = True
+                            if not isinstance(change.sibling, NoChange):
+                                print(name, attr, "sibling", change.sibling)
+                                failed = True
+                            if not isinstance(change.is_array, NoChange):
+                                print(name, attr, "is_array", change.is_array)
+                                failed = True
+                            if not isinstance(change.group, NoChange):
+                                print(name, attr, "group", change.group)
+                                failed = True
+                            if not isinstance(change.profile, NoChange):
+                                print(name, attr, "profile", change.profile)
+                                failed = True
+                            if isinstance(change.enum, dict):
+                                for k, value in change.enum.items():
+                                    if not isinstance(value, NoChange):
+                                        print(name, attr, "enum", k, value)
+                                        failed = True
+                    if failed:
                         fail += 1
+                        
             if fail > 0:
                 bad += 1
                 bad_attrs += fail
+            else:
+                ok += 1
         else:
             ok += 1
         # if not isinstance(event, NoChange):

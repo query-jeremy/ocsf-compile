@@ -6,6 +6,7 @@ from .options import CompilationOptions
 from .protoschema import ProtoSchema
 from .planners.planner import Operation, Planner
 from .planners.annotations import AnnotationPlanner
+from .planners.set_category import SetCategoryPlanner
 from .planners.extension import ExtensionMergePlanner, ExtensionCopyPlanner
 from .planners.extends import ExtendsPlanner
 from .planners.include import IncludePlanner
@@ -38,9 +39,10 @@ class Compilation:
                 IncludePlanner(self._proto, options),
                 ExtendsPlanner(self._proto, options),
                 ExtensionMergePlanner(self._proto, options),
+                ProfilePlanner(self._proto, options)
             ],
-            [UidPlanner(self._proto, options)],
-            [ProfilePlanner(self._proto, options), DictionaryPlanner(self._proto, options)],
+            [SetCategoryPlanner(self._proto, options)],
+            [UidPlanner(self._proto, options), DictionaryPlanner(self._proto, options)],
             [ExtensionCopyPlanner(self._proto, options)],
         ]
 

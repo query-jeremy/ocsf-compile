@@ -9,36 +9,30 @@ PATH = "/Users/jfisher/Source/ocsf/ocsf-schema"
 repo = read_repo(PATH, preserve_raw_data=True)
 compiler = Compilation(repo)
 
-TARGET = "objects/device.json"
+TARGET = "events/discovery/job_query.json"
 from pprint import pprint
 
 analysis = compiler.analyze()
 order = compiler.order()
 compile = compiler.compile()
-
-print("ANALYSIS PHASE 0")
-try:
-    pprint(analysis[0][TARGET])
-except KeyError:
-    pass
-
-print("ANALYSIS PHASE 1")
-try:
-    pprint(analysis[1][TARGET])
-except KeyError:
-    pass
+schema = compiler.build()
 
 print("ORDER")
-try:
+prereqs: set[str] = set()
+def find_op(target: str):
     for o in order:
-        if o.target == TARGET:
-            pprint(o)
-except KeyError:
-    pass
+        if o.target == target:
+            if o.prerequisite is not None:
+                find_op(o.prerequisite)
+                prereqs.add(o.prerequisite)
+            #pprint(o)
+    return None
+find_op(TARGET)
 
+print()
 print("COMPILE")
-try:
-    pprint(compile[TARGET])
-except KeyError:
-    pass
-# pprint(compiler.build())
+    
+for prereq in prereqs:
+    if prereq in compile:
+        pprint(compile[prereq])
+pprint(compile[TARGET])

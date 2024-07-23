@@ -151,44 +151,30 @@ def merge(
                 right_value = deepcopy(right_value)
             simple = True
 
-            # Recursively merge dictionaries of str => DefinitionPart
-            #########################################################
-            # The next 10 lines or so are all to confirm, at runtime, that we're working with
-            # hydrated dictionaries of dict[str, DefinitionPart]. When this is true, we will
-            # recursively merge each item in the dictionary.
-            #
-            # When it isn't, we'll treat both values as if they were scalar values below.
-            #
+            # Recursively merge dictionaries
+            ################################
+            # 
             if isinstance(left_value, dict) and isinstance(right_value, dict):
                 left_value = cast(dict[Any, Any], left_value)
                 right_value = cast(dict[Any, Any], right_value)
 
                 if len(left_value) > 0 and len(right_value) > 0:
-                    k1 = next(iter(left_value.keys()))
-                    v1 = left_value[k1]
-                    k2 = next(iter(right_value.keys()))
-                    v2 = right_value[k2]
+                    simple = False
 
-                    if (
-                        isinstance(v1, DefinitionPart)
-                        and isinstance(v2, DefinitionPart)
-                        and isinstance(k1, str)
-                        and isinstance(k2, str)
-                    ):
-                        # We've confirmed that these dictionaries are dict[str, DefinitionPart].
-                        # Now we can recursively merge each item in the dictionary.
-                        simple = False
-                        left_value = cast(dict[str, DefinitionPart], left_value)
-                        right_value = cast(dict[str, DefinitionPart], right_value)
-
-                        for key, value in right_value.items():
-                            next_path = path + (key,)
-                            if key not in left_value:
-                                if options.add_dict_items and _can_update(next_path, None, value, options):
-                                    left_value[key] = value
-                                    results.append(next_path)
-                            else:
-                                results += merge(left_value[key], value, options=options, trail=next_path)
+                    for key, value in right_value.items():
+                        next_path = path + (key,)
+                        if key not in left_value:
+                            if options.add_dict_items and _can_update(next_path, None, value, options):
+                                left_value[key] = value
+                                results.append(next_path)
+                        elif isinstance(left_value[key], DefinitionPart) and isinstance(value, DefinitionPart):
+                            results += merge(left_value[key], value, options=options, trail=next_path)
+                        #elif isinstance(left_value[key], list) and isinstance(value, list):
+                        #    left_value[key] = list(set(left_value[key] + value))
+                        #    results.append(next_path)
+                        elif _can_update(path, left_value[key], right_value[key], options):
+                            left_value[key] = value
+                            results.append(next_path)
 
             # Merge DefinitionPart objects (OCSF complex types)
             ###################################################

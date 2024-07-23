@@ -4,7 +4,7 @@ from ..protoschema import ProtoSchema
 from ..merge import merge, MergeResult, MergeOptions
 
 from .planner import Operation, Planner, Analysis
-from ocsf.repository import DefinitionFile, EventDefn, ObjectDefn, SpecialFiles, DictionaryDefn
+from ocsf.repository import DefinitionFile, EventDefn, ObjectDefn, SpecialFiles, DictionaryDefn, AttrDefn, DefnWithAttrs
 
 
 @dataclass(eq=True, frozen=True)
@@ -14,16 +14,37 @@ class DictionaryOp(Operation):
 
     def apply(self, schema: ProtoSchema) -> MergeResult:
         target = schema[self.target]
-        assert target.data is not None
+        #assert target.data is not None
+        assert isinstance(target.data, DefnWithAttrs)
+        if target.data.attributes is None:
+            return []
 
         assert self.prerequisite is not None
         prereq = schema[self.prerequisite]
         assert prereq.data is not None
         assert isinstance(prereq.data, DictionaryDefn)
+        if prereq.data.attributes is None:
+            return []
 
-        return merge(
-            target.data, prereq.data, options=MergeOptions(allowed_fields=["attributes"], add_dict_items=False)
-        )
+        # Merge each attribute below.
+        # We could merge the event with the dictionary, set allowed fields to
+        # ["attributes"], and add_dict_items to False. That would limit the
+        # merge to the attributes section of the dictionary and prevent adding
+        # all attributes to the event. However, it will also prevent enum
+        # members defined in dictionary.json from being merged to events.
+        results: MergeResult = []
+        for key, value in target.data.attributes.items():
+            if isinstance(value, AttrDefn) and key in prereq.data.attributes:
+                right = prereq.data.attributes[key]
+                assert isinstance(right, AttrDefn)
+                rs = merge(value, right)
+                for r in rs:
+                    results.append(("attributes", key) + r)
+
+        return results
+        #return merge(
+        #    target.data, prereq.data, options=MergeOptions(allowed_fields=["attributes"], add_dict_items=False)
+        #)
 
 
 class DictionaryPlanner(Planner):

@@ -59,7 +59,7 @@ class SimplePart(DefinitionPart):
 class ComplexPart(DefinitionPart):
     value: Optional[int] = None
     other: Optional[SimplePart] = None
-    attrs: Optional[dict[str, SimplePart]] = None
+    attrs: Optional[dict[str, SimplePart | str | list[str]]] = None
 
 
 def complex_setup():
@@ -83,9 +83,13 @@ def test_complex_merge():
     assert left.other is not None
     assert left.other.value == 2
     assert left.attrs is not None
+    assert isinstance(left.attrs["a"], SimplePart)
     assert left.attrs["a"].value == 3
+    assert isinstance(left.attrs["b"], SimplePart)
     assert left.attrs["b"].value == 4
+    assert isinstance(left.attrs["c"], SimplePart)
     assert left.attrs["c"].value == 5
+    assert isinstance(left.attrs["d"], SimplePart)
     assert left.attrs["d"].value == 6
     assert len(r) == 2
     assert ("attrs", "c") in r
@@ -94,6 +98,27 @@ def test_complex_merge():
     left.other.value = None
     r = merge(left, right)
     assert left.other.value == 3
+
+def test_attrs_merge():
+    left, right = complex_setup()
+    right.attrs = {"include_": "somefile.json", "a": SimplePart(value=4), "c": SimplePart(value=5), "d": SimplePart(value=6)}
+    r = merge(left, right)
+
+    assert left.value == 1
+    assert left.other is not None
+    assert left.other.value == 2
+    assert left.attrs is not None
+    assert isinstance(left.attrs["a"], SimplePart)
+    assert left.attrs["a"].value == 3
+    assert isinstance(left.attrs["b"], SimplePart)
+    assert left.attrs["b"].value == 4
+    assert isinstance(left.attrs["c"], SimplePart)
+    assert left.attrs["c"].value == 5
+    assert isinstance(left.attrs["d"], SimplePart)
+    assert left.attrs["d"].value == 6
+    assert len(r) == 3
+    assert ("attrs", "c") in r
+    assert ("attrs", "d", "value") in r
 
 
 def test_allowed_fields():

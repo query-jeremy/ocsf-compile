@@ -89,11 +89,16 @@ class ProtoSchema:
                 elif file.path.startswith(RepoPaths.EVENTS.value):
                     assert file.data is not None
                     assert isinstance(file.data, EventDefn)
-                    assert file.data.name is not None
-                    data = asdict(file.data)
-                    _remove_nones(data)
+                    if file.data.uid is not None and file.data.name != "base_event":
+                        assert file.data.name is not None
+                        data = asdict(file.data)
+                        _remove_nones(data)
+                        if file.data.src_extension is not None:
+                            name = "/".join([file.data.src_extension, file.data.name])
+                        else:
+                            name = file.data.name
 
-                    schema.classes[file.data.name] = dacite.from_dict(OcsfEvent, data)
+                        schema.classes[name] = dacite.from_dict(OcsfEvent, data)
 
                 elif file.path == SpecialFiles.DICTIONARY:
                     #types: dict[str, OcsfType] = field(default_factory=dict)
