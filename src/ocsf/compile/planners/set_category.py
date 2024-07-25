@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from pathlib import PurePath
 
@@ -32,11 +31,11 @@ class SetCategoryOp(Operation):
         assert isinstance(categories, CategoriesDefn)
         if not isinstance(categories.attributes, dict):
             raise ValueError(f"categories.json file is missing attributes")
-        
+
         if category not in categories.attributes:
             raise ValueError(f"Unknown category: {category}")
             return []
-        
+
         target.data.category = category
         return [("category",)]
 

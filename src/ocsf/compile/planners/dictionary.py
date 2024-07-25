@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from ..protoschema import ProtoSchema
-from ..merge import merge, MergeResult, MergeOptions
+from ..merge import merge, MergeResult
 
 from .planner import Operation, Planner, Analysis
 from ocsf.repository import DefinitionFile, EventDefn, ObjectDefn, SpecialFiles, DictionaryDefn, AttrDefn, DefnWithAttrs
@@ -14,7 +14,7 @@ class DictionaryOp(Operation):
 
     def apply(self, schema: ProtoSchema) -> MergeResult:
         target = schema[self.target]
-        #assert target.data is not None
+        # assert target.data is not None
         assert isinstance(target.data, DefnWithAttrs)
         if target.data.attributes is None:
             return []
@@ -42,9 +42,9 @@ class DictionaryOp(Operation):
                     results.append(("attributes", key) + r)
 
         return results
-        #return merge(
+        # return merge(
         #    target.data, prereq.data, options=MergeOptions(allowed_fields=["attributes"], add_dict_items=False)
-        #)
+        # )
 
 
 class DictionaryPlanner(Planner):

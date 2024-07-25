@@ -73,6 +73,8 @@ class AttrDefn(DefinitionPart):
     observable: Optional[int] = None
     profile: Optional[str | list[str]] = None
     sibling: Optional[str] = None
+    object_type: Optional[str] = None
+    object_name: Optional[str] = None
 
 
 @dataclass

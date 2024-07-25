@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from .planner import Operation, Planner, Analysis
-from ..merge import merge, MergeResult
+from ..merge import merge, MergeResult, MergeOptions
 from ..protoschema import ProtoSchema
 
 from ocsf.repository import DefinitionFile, DefnWithAnnotations, AttrDefn
@@ -23,7 +23,9 @@ class AnnotationOp(Operation):
         results: MergeResult = []
         for name, attr in target.data.attributes.items():
             if isinstance(attr, AttrDefn):
-                for result in merge(attr, target.data.annotations):
+                for result in merge(
+                    attr, target.data.annotations, options=MergeOptions(overwrite=True, overwrite_none=False)
+                ):
                     results.append(("attributes", name) + result)
 
         return results

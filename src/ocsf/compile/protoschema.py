@@ -83,25 +83,18 @@ class ProtoSchema:
                     if not file.data.name.startswith("_"):
                         data = asdict(file.data)
                         _remove_nones(data)
-
                         schema.objects[file.data.name] = dacite.from_dict(OcsfObject, data)
 
                 elif file.path.startswith(RepoPaths.EVENTS.value):
                     assert file.data is not None
                     assert isinstance(file.data, EventDefn)
-                    if file.data.uid is not None and file.data.name != "base_event":
+                    if file.data.uid is not None or file.data.name == "base_event":
                         assert file.data.name is not None
                         data = asdict(file.data)
                         _remove_nones(data)
-                        if file.data.src_extension is not None:
-                            name = "/".join([file.data.src_extension, file.data.name])
-                        else:
-                            name = file.data.name
-
-                        schema.classes[name] = dacite.from_dict(OcsfEvent, data)
+                        schema.classes[file.data.name] = dacite.from_dict(OcsfEvent, data)
 
                 elif file.path == SpecialFiles.DICTIONARY:
-                    #types: dict[str, OcsfType] = field(default_factory=dict)
                     assert file.data is not None
                     assert isinstance(file.data, DictionaryDefn)
                     assert file.data.types is not None
@@ -120,21 +113,6 @@ class ProtoSchema:
 
             except Exception as e:
                 raise ValueError(f"Error processing {file.path}: {e}") from e
-
-        # Build type_name, object_name, and object_type.
-        # These are really only needed by the OCSF server internals, but we're trying
-        # to be as faithful to the server's schema as possible.
-        for record in list(schema.classes.values()) + list(schema.objects.values()):
-            for attr in record.attributes.values():
-                if attr.type in schema.objects:
-                    attr.object_name = schema.objects[attr.type].caption
-                    attr.object_type = attr.type
-
-                elif attr.type in schema.types:
-                    attr.type_name = schema.types[attr.type].caption
-
-                else:
-                    raise ValueError(f"Unknown type {attr.type} in {record.name}")
 
         if "base" in schema.classes:
             schema.base_event = schema.classes["base"]

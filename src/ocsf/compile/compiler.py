@@ -7,12 +7,20 @@ from .protoschema import ProtoSchema
 from .planners.planner import Operation, Planner
 from .planners.annotations import AnnotationPlanner
 from .planners.set_category import SetCategoryPlanner
-from .planners.extension import ExtensionMergePlanner, ExtensionCopyPlanner
+from .planners.extension import (
+    ExtensionMergePlanner,
+    ExtensionCopyPlanner,
+    MarkExtensionPlanner,
+    ExtensionPrefixPlanner,
+)
 from .planners.extends import ExtendsPlanner
 from .planners.include import IncludePlanner
-from .planners.profile import ProfilePlanner
+from .planners.profile import ExcludeProfileAttrsPlanner, MarkProfilePlanner
 from .planners.dictionary import DictionaryPlanner
 from .planners.uid import UidPlanner
+from .planners.object_type import ObjectTypePlanner
+from .planners.uid_names import IdSiblingPlanner
+from .planners.datetime import DateTimePlanner
 from .merge import MergeResult
 
 FileOperations = dict[RepoPath, list[Operation]]
@@ -36,14 +44,22 @@ class Compilation:
         self._planners: list[list[Planner]] = [
             [
                 AnnotationPlanner(self._proto, options),
+                MarkExtensionPlanner(self._proto, options),
+                MarkProfilePlanner(self._proto, options),
                 IncludePlanner(self._proto, options),
                 ExtendsPlanner(self._proto, options),
                 ExtensionMergePlanner(self._proto, options),
-                ProfilePlanner(self._proto, options)
+                ExcludeProfileAttrsPlanner(self._proto, options),
             ],
             [SetCategoryPlanner(self._proto, options)],
             [UidPlanner(self._proto, options), DictionaryPlanner(self._proto, options)],
-            [ExtensionCopyPlanner(self._proto, options)],
+            [
+                ExtensionPrefixPlanner(self._proto, options),
+                ObjectTypePlanner(self._proto, options),
+                IdSiblingPlanner(self._proto, options),
+                DateTimePlanner(self._proto, options),
+                ExtensionCopyPlanner(self._proto, options),
+            ],
         ]
 
     def analyze(self) -> CompilationOperations:

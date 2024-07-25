@@ -99,9 +99,15 @@ def test_complex_merge():
     r = merge(left, right)
     assert left.other.value == 3
 
+
 def test_attrs_merge():
     left, right = complex_setup()
-    right.attrs = {"include_": "somefile.json", "a": SimplePart(value=4), "c": SimplePart(value=5), "d": SimplePart(value=6)}
+    right.attrs = {
+        "include_": "somefile.json",
+        "a": SimplePart(value=4),
+        "c": SimplePart(value=5),
+        "d": SimplePart(value=6),
+    }
     r = merge(left, right)
 
     assert left.value == 1
@@ -154,8 +160,34 @@ def test_ignored_fields():
     assert left.other is not None
     assert left.other.value == 2
     assert left.attrs is not None
+    assert "a" in left.attrs and isinstance(left.attrs["a"], SimplePart)
     assert left.attrs["a"].value == 3
+    assert "b" in left.attrs and isinstance(left.attrs["b"], SimplePart)
     assert left.attrs["b"].value == 4
+    assert "c" in left.attrs and isinstance(left.attrs["c"], SimplePart)
     assert left.attrs["c"].value == 5
     assert len(r) == 2
     assert ("attrs", "c") in r
+
+
+def test_empty_left_dict():
+    left = ComplexPart(
+        value=1,
+        other=SimplePart(value=2),
+        attrs=None,
+    )
+    right = ComplexPart(
+        value=2,
+        other=SimplePart(value=3),
+        attrs={"a": SimplePart(value=4), "c": SimplePart(value=5), "d": SimplePart(value=6)},
+    )
+    r = merge(left, right)
+    assert len(r) == 1
+    assert left.attrs is not None
+    assert "a" in left.attrs
+
+    left.attrs = {}
+    r = merge(left, right)
+    assert len(r) == 3
+    assert left.attrs is not None
+    assert "a" in left.attrs

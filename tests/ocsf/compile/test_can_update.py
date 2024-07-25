@@ -58,3 +58,10 @@ def test_deep_allowed():
 
 def test_deep_attributes():
     assert _can_update(("attrs", "a", "type"), None, 1, MergeOptions(allowed_fields=[("attrs")]))
+
+
+def test_overwrite_none():
+    assert not _can_update(("a",), 2, None, MergeOptions(overwrite=True, overwrite_none=False))
+    assert _can_update(("a",), 2, 1, MergeOptions(overwrite=True, overwrite_none=False))
+    assert not _can_update(("a",), 1, None, MergeOptions(overwrite=False, overwrite_none=True))
+    assert not _can_update(("a",), 2, 1, MergeOptions(overwrite=False, overwrite_none=True))

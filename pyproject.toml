@@ -13,8 +13,8 @@ packages = [
 python = "^3.11"
 semver = "^3.0.2"
 termcolor = "^2.4.0"
-#ocsf-lib = {path = "../ocsf-lib-py", develop = true} 
-ocsf-lib = "^0.3.0"
+ocsf-lib = {path = "../ocsf-lib-py", develop = true} 
+#ocsf-lib = "^0.3.0"
 dacite = "^1.8.1"
 pytest-env = "^1.1.3"
 

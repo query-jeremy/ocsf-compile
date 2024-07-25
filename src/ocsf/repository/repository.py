@@ -53,6 +53,7 @@ class Repository:
         yield from extns
 
     def profiles(self) -> Iterable[str]:
+        # TODO include profiles from extensions
         for path in self._contents:
             if path.startswith(RepoPaths.PROFILES.value):
                 yield PurePath(path).stem

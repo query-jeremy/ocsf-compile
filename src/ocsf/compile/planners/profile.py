@@ -16,7 +16,7 @@ from ocsf.repository import DefinitionFile, ProfileDefn, ObjectDefn, EventDefn, 
 
 
 @dataclass(eq=True, frozen=True)
-class ExcludeProfileOp(Operation):
+class ExcludeProfileAttrsOp(Operation):
     def apply(self, schema: ProtoSchema) -> MergeResult:
         result: MergeResult = []
 
@@ -50,27 +50,22 @@ class MarkProfileOp(Operation):
     def apply(self, schema: ProtoSchema) -> MergeResult:
         result: MergeResult = []
 
-        assert self.prerequisite is not None
+        assert self.prerequisite is None
 
         target = schema[self.target]
         assert target.data is not None
-        assert isinstance(target.data, ObjectDefn) or isinstance(target.data, EventDefn)
+        assert isinstance(target.data, ProfileDefn)
 
         if target.data.attributes is None:
             return result
 
-        profile = schema[self.prerequisite]
-        profile_name = PurePath(self.prerequisite).stem
-        assert profile.data is not None
-        assert isinstance(profile.data, ProfileDefn)
+        if target.data.name is None:
+            raise ValueError(f"Profile name is required {self.target}")
 
-        if profile.data.attributes is not None:
-            for attr in profile.data.attributes:
-                if attr in target.data.attributes:
-                    defn = target.data.attributes[attr]
-                    if isinstance(defn, AttrDefn):
-                        result.append(("attributes", attr, "profile"))
-                        defn.profile = profile_name
+        for name, attr in target.data.attributes.items():
+            if isinstance(attr, AttrDefn):
+                result.append(("attributes", name, "profile"))
+                attr.profile = target.data.name
 
         return result
 
@@ -97,7 +92,7 @@ def _find_profile(schema: ProtoSchema, profile_ref: str, relative_to: str) -> st
     return None
 
 
-class ProfilePlanner(Planner):
+class ExcludeProfileAttrsPlanner(Planner):
     def __init__(self, schema: ProtoSchema, options: CompilationOptions):
         if options.profiles is None:
             options.profiles = list(schema.repo.profiles())
@@ -118,9 +113,15 @@ class ProfilePlanner(Planner):
                 #   profiles/profile_name.json
                 for profile_ref in input.data.profiles:
                     path = _find_profile(self._schema, profile_ref, input.path)
-                    if PurePath(profile_ref).stem in self._options.profiles and path is not None:
-                        return MarkProfileOp(input.path, path)
-                    else:
-                        return ExcludeProfileOp(input.path, path)
+                    if path is not None and PurePath(profile_ref).stem not in self._options.profiles:
+                        return ExcludeProfileAttrsOp(input.path, path)
 
         return None
+
+
+class MarkProfilePlanner(ExcludeProfileAttrsPlanner):
+    def analyze(self, input: DefinitionFile) -> Analysis:
+        assert self._options.profiles is not None
+
+        if isinstance(input.data, ProfileDefn):
+            return MarkProfileOp(input.path, None)

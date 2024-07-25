@@ -32,6 +32,19 @@ def get_planner(ps: ProtoSchema):
     return ExtendsPlanner(ps, CompilationOptions())
 
 
+def test_apply():
+    ps = get_schema()
+    op = ExtendsOp("events/network/network.json", "events/base.json")
+    result = op.apply(ps)
+    assert len(result) == 1
+    assert result[0] == ("attributes", "a")
+    assert isinstance(ps["events/network/network.json"].data, EventDefn)
+    assert ps["events/network/network.json"].data.attributes == {
+        "a": AttrDefn(description="A!"),
+        "b": AttrDefn(description="B!"),
+    }
+
+
 def test_find_base():
     repo = get_repo()
     assert _find_base(repo, "base", "events/network/network.json") == "events/base.json"

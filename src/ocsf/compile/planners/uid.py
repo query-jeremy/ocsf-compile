@@ -17,6 +17,19 @@ from ocsf.repository import (
 )
 
 
+def _find_extn_path(schema: ProtoSchema, target: str) -> str | None:
+    for extn_dir in schema.repo.extensions():
+        if extn_dir == target:
+            return extn_dir
+
+        extn = schema[as_path(RepoPaths.EXTENSIONS, extn_dir, SpecialFiles.EXTENSION)]
+        assert isinstance(extn.data, ExtensionDefn)
+        if extn.data.name == target:
+            return extn_dir
+
+    return None
+
+
 @dataclass(eq=True, frozen=True)
 class UidOp(Operation):
     def apply(self, schema: ProtoSchema) -> MergeResult:
@@ -25,12 +38,6 @@ class UidOp(Operation):
         assert defn is not None
         assert isinstance(defn, EventDefn)
 
-        if defn.uid is None:
-            return []
-
-        if defn.category is None:
-            return []
-
         enums = EventDefn()
         enums.attributes = {}
 
@@ -38,28 +45,39 @@ class UidOp(Operation):
         extn_uid = 0
         if defn.src_extension is not None:
             # look up extn uid
-            extn = schema[as_path(RepoPaths.EXTENSIONS, defn.src_extension, SpecialFiles.EXTENSION)]
+            extn_dir = _find_extn_path(schema, defn.src_extension)
+            if extn_dir is None:
+                raise ValueError(f"Extension {defn.src_extension} not found for {self.target}")
+
+            extn = schema[as_path(RepoPaths.EXTENSIONS, extn_dir, SpecialFiles.EXTENSION)]
             assert isinstance(extn.data, ExtensionDefn)
             if extn.data.uid is not None:
                 extn_uid = extn.data.uid
 
         # Find the category UID and build the category_uid enum
-        cats = schema[as_path(SpecialFiles.CATEGORIES)].data
-        assert isinstance(cats, CategoriesDefn)
-        if cats.attributes is None:
-            return []
+        cat_uid = 0
+        if defn.category is not None:
+            cats = schema[as_path(SpecialFiles.CATEGORIES)].data
+            assert isinstance(cats, CategoriesDefn)
+            if cats.attributes is None:
+                return []
 
-        cat = cats.attributes.get(defn.category)
-        assert isinstance(cat, CategoryDefn)
-        assert cat.uid is not None
-        cat_uid = cat.uid
+            cat = cats.attributes.get(defn.category, None)
+            if isinstance(cat, CategoryDefn):
+                assert cat.uid is not None
+                cat_uid = cat.uid
 
-        enums.attributes["category_uid"] = AttrDefn(
-            enum={str(cat_uid): EnumMemberDefn(caption=cat.caption, description=cat.description)}
-        )
+                enums.attributes["category_uid"] = AttrDefn(
+                    enum={str(cat_uid): EnumMemberDefn(caption=cat.caption, description=cat.description)}
+                )
 
         # Calculate the Class UID and build the class_uid enum
-        class_uid = (extn_uid * 100000) + (cat_uid * 1000) + defn.uid
+        if defn.uid is not None:
+            class_uid = (extn_uid * 100000) + (cat_uid * 1000) + defn.uid
+            enums.uid = class_uid
+        else:
+            class_uid = 0
+
         attr = AttrDefn()
         attr.enum = {}
         attr.enum[str(class_uid)] = EnumMemberDefn(caption=defn.caption, description=defn.description)
@@ -84,18 +102,31 @@ class UidOp(Operation):
             enums.attributes["type_uid"] = attr
 
         # Remove any enum members that were inherited from base_event
-        if isinstance(defn.attributes, dict) and "class_uid" in defn.attributes and isinstance(defn.attributes["class_uid"], AttrDefn):
-            defn.attributes["class_uid"].enum = {}
-        if isinstance(defn.attributes, dict) and "category_uid" in defn.attributes and isinstance(defn.attributes["category_uid"], AttrDefn):
-            defn.attributes["category_uid"].enum = {}
-        if isinstance(defn.attributes, dict) and "type_uid" in defn.attributes and isinstance(defn.attributes["type_uid"], AttrDefn):
-            defn.attributes["type_uid"].enum = {}
+        if defn.name != "base_event":
+            if (
+                isinstance(defn.attributes, dict)
+                and "class_uid" in defn.attributes
+                and isinstance(defn.attributes["class_uid"], AttrDefn)
+            ):
+                defn.attributes["class_uid"].enum = {}
+            if (
+                isinstance(defn.attributes, dict)
+                and "category_uid" in defn.attributes
+                and isinstance(defn.attributes["category_uid"], AttrDefn)
+            ):
+                defn.attributes["category_uid"].enum = {}
+            if (
+                isinstance(defn.attributes, dict)
+                and "type_uid" in defn.attributes
+                and isinstance(defn.attributes["type_uid"], AttrDefn)
+            ):
+                defn.attributes["type_uid"].enum = {}
 
         return merge(
             defn,
             enums,
             overwrite=True,
-            allowed_fields=[("attributes", "category_uid"), ("attributes", "class_uid"), ("attributes", "type_uid")],
+            allowed_fields=[("uid", ), ("attributes", "category_uid"), ("attributes", "class_uid"), ("attributes", "type_uid")],
         )
 
     def __str__(self):

@@ -24,6 +24,12 @@ class MergeOptions:
     copy: bool = True
     """If True, always merge a copy of the right value rather than a reference"""
 
+    overwrite_none: bool = False
+    """If True, overwrite left with right even if right is None"""
+
+    merge_lists: bool = True
+    """If True, merge lists by combining their unique elements"""
+
 
 def _can_update(path: tuple[str, ...], left_value: Any, right_value: Any, options: MergeOptions) -> bool:
     """Helper function to decide if a value should be updated.
@@ -68,7 +74,10 @@ def _can_update(path: tuple[str, ...], left_value: Any, right_value: Any, option
 
     def change_field():
         # If overwrite is True, we'll always update the left value.
-        if options.overwrite:
+        if options.overwrite and options.overwrite_none:
+            return True
+
+        elif options.overwrite and not options.overwrite_none and right_value is not None:
             return True
 
         # Otherwise, we'll only update the left value if it's None.
@@ -153,12 +162,12 @@ def merge(
 
             # Recursively merge dictionaries
             ################################
-            # 
+            #
             if isinstance(left_value, dict) and isinstance(right_value, dict):
                 left_value = cast(dict[Any, Any], left_value)
                 right_value = cast(dict[Any, Any], right_value)
 
-                if len(left_value) > 0 and len(right_value) > 0:
+                if len(right_value) > 0:
                     simple = False
 
                     for key, value in right_value.items():
@@ -169,12 +178,20 @@ def merge(
                                 results.append(next_path)
                         elif isinstance(left_value[key], DefinitionPart) and isinstance(value, DefinitionPart):
                             results += merge(left_value[key], value, options=options, trail=next_path)
-                        #elif isinstance(left_value[key], list) and isinstance(value, list):
+                        # elif isinstance(left_value[key], list) and isinstance(value, list):
                         #    left_value[key] = list(set(left_value[key] + value))
                         #    results.append(next_path)
                         elif _can_update(path, left_value[key], right_value[key], options):
                             left_value[key] = value
                             results.append(next_path)
+
+            elif isinstance(left_value, list) and isinstance(right_value, list) and options.merge_lists:
+                simple = False
+                # TODO check to see if these can be cast to list[str] - are there any other types of lists in the JSON definitions?
+                left_value = cast(list[Any], left_value)
+                right_value = cast(list[Any], right_value)
+                setattr(left, attr, list(set(left_value + right_value)))
+                results.append(path)
 
             # Merge DefinitionPart objects (OCSF complex types)
             ###################################################
