@@ -50,5 +50,5 @@ class DictionaryOp(Operation):
 class DictionaryPlanner(Planner):
     def analyze(self, input: DefinitionFile) -> Analysis:
         if input.data is not None:
-            if isinstance(input.data, EventDefn) or isinstance(input.data, ObjectDefn):
+            if isinstance(input.data, DefnWithAttrs):
                 return DictionaryOp(input.path, SpecialFiles.DICTIONARY.value)

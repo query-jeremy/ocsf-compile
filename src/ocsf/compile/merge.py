@@ -150,7 +150,7 @@ def merge(
     # Now for the money: iterate over all attributes in the left definition and
     # update where necessary.
     for attr, _ in get_type_hints(left).items():
-        # If the attribute isn't in the right, there's nothing to do.
+        # If the attribute isn't in the right operand, there's nothing to do.
         if hasattr(right, attr):
             path = trail + (attr,)
 

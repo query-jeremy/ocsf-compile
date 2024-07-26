@@ -85,6 +85,14 @@ def _find_profile(schema: ProtoSchema, profile_ref: str, relative_to: str) -> st
     if extn is not None:
         search.append(as_path(RepoPaths.EXTENSIONS, extn, RepoPaths.PROFILES, profile_name + ".json"))
 
+    parts = PurePath(profile_ref).parts
+    if len(parts) > 1:
+        try:
+            path = schema.find_extension_path(parts[0])
+            search.append(as_path(path, RepoPaths.PROFILES, profile_name + ".json"))
+        except KeyError:
+            pass
+
     for path in reversed(search):
         if path in schema.repo:
             return path
@@ -125,3 +133,4 @@ class MarkProfilePlanner(ExcludeProfileAttrsPlanner):
 
         if isinstance(input.data, ProfileDefn):
             return MarkProfileOp(input.path, None)
+

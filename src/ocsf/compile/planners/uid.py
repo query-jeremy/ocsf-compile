@@ -77,6 +77,8 @@ class UidOp(Operation):
             enums.uid = class_uid
         else:
             class_uid = 0
+            if defn.name == "base_event":
+                enums.uid = 0
 
         attr = AttrDefn()
         attr.enum = {}

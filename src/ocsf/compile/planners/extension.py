@@ -13,6 +13,7 @@ from ocsf.repository import (
     ObjectDefn,
     EventDefn,
     as_path,
+    DefnWithExtn,
     RepoPaths,
     SpecialFiles,
     ExtensionDefn,
@@ -73,7 +74,7 @@ class ExtensionCopyOp(Operation):
         source = schema[self.prerequisite]
         assert source.data is not None
 
-        if not isinstance(source.data, ObjectDefn) and not isinstance(source.data, EventDefn):
+        if not isinstance(source.data, DefnWithExtn):
             return []
 
         schema[self.target] = deepcopy(source)
@@ -113,7 +114,7 @@ class MarkExtensionOp(Operation):
         source = schema[self.prerequisite]
         assert source.data is not None
 
-        if not isinstance(source.data, ObjectDefn) and not isinstance(source.data, EventDefn):
+        if not isinstance(source.data, DefnWithExtn):
             return []
 
         # Look up the source extension name from extension.json (because it may not match the directory)
@@ -149,20 +150,20 @@ class MarkExtensionPlanner(ExtensionPlanner):
 
 
 @dataclass(eq=True, frozen=True)
-class PrefixNameOp(Operation):
-    """Prefix the name of an object or event with its extension name."""
+class PrefixKeyOp(Operation):
+    """Prefix the key of an object or event (where it is found in the schema) with its extension name."""
 
     # Prerequisite: MarkExtensionOp has been applied
     def apply(self, schema: ProtoSchema) -> MergeResult:
         source = schema[self.target]
         assert source.data is not None
 
-        if not isinstance(source.data, ObjectDefn) and not isinstance(source.data, EventDefn):
+        if not isinstance(source.data, DefnWithExtn):
             return []
 
         if source.data.src_extension is not None:
             assert source.data.name is not None
-            source.data.name = "/".join((source.data.src_extension, source.data.name))
+            source.data.key = "/".join((source.data.src_extension, source.data.name))
             return [("name",)]
 
         return []
@@ -191,18 +192,19 @@ class _ExtensionTypeMap:
             extn = extension(file.path)
             if extn is not None and extn in self._extensions:
                 if (
-                    (isinstance(file.data, ObjectDefn) or isinstance(file.data, EventDefn))
-                    and file.data.name is not None
+                    (isinstance(file.data, DefnWithExtn))
                     and file.data.src_extension is not None
                 ):
-                    if "/" in file.data.name:
-                        new = file.data.name
-                        old = file.data.name.split("/")[1]
-                    else:
+                    if file.data.key is not None and "/" in file.data.key:
+                        new = file.data.key
+                        old = file.data.key.split("/")[1]
+                        self._map[old] = new
+
+                    elif file.data.name is not None:
                         old = file.data.name
                         new = "/".join((file.data.src_extension, file.data.name))
+                        self._map[old] = new
 
-                    self._map[old] = new
 
         self._built = True
 
@@ -271,7 +273,7 @@ class ExtensionPrefixPlanner(ExtensionPlanner):
 
         extn = extension(input.path)
         if extn is not None and extn in self._options.extensions:
-            ops.append(PrefixNameOp(input.path))
+            ops.append(PrefixKeyOp(input.path))
 
         if isinstance(input.data, DefnWithAttrs):
             ops.append(PrefixTypeOp(input.path, map=self._map))

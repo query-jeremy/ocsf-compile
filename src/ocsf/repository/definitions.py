@@ -103,6 +103,13 @@ class ObjectDefn(DefinitionData):
     deprecated: Optional[DeprecationInfoDefn] = None
     include_: Optional[IncludeTarget] = None
     src_extension: Optional[str] = None
+    key: Optional[str] = None
+
+    def get_key(self) -> Optional[str]:
+        if self.key is None:
+            return self.name
+        else:
+            return self.key
 
 
 @dataclass
@@ -122,7 +129,13 @@ class EventDefn(DefinitionData):
     deprecated: Optional[DeprecationInfoDefn] = None
     include_: Optional[IncludeTarget] = None
     src_extension: Optional[str] = None
+    key: Optional[str] = None
 
+    def get_key(self) -> Optional[str]:
+        if self.key is None:
+            return self.name
+        else:
+            return self.key
 
 @dataclass
 class IncludeDefn(DefinitionData):
@@ -145,6 +158,14 @@ class ProfileDefn(DefinitionData):
     attributes: Optional[dict[str, AttrDefn | IncludeTarget]] = None
     deprecated: Optional[DeprecationInfoDefn] = None
     annotations: Optional[AttrDefn] = None
+    src_extension: Optional[str] = None
+    key: Optional[str] = None
+
+    def get_key(self) -> Optional[str]:
+        if self.key is None:
+            return self.name
+        else:
+            return self.key
 
 
 @dataclass
@@ -188,3 +209,4 @@ DefnWithName = ObjectDefn | EventDefn | ExtensionDefn
 DefnWithAttrs = ObjectDefn | EventDefn | ProfileDefn | DictionaryDefn | IncludeDefn
 DefnWithInclude = ObjectDefn | EventDefn
 DefnWithAnnotations = ProfileDefn | IncludeDefn
+DefnWithExtn = ObjectDefn | EventDefn | ProfileDefn

@@ -3,7 +3,7 @@ from pathlib import PurePath
 from typing import Optional, Iterable
 
 from .helpers import RepoPath, RepoPaths
-from .definitions import AnyDefinition
+from .definitions import AnyDefinition, ProfileDefn
 
 
 @dataclass
@@ -55,5 +55,13 @@ class Repository:
     def profiles(self) -> Iterable[str]:
         # TODO include profiles from extensions
         for path in self._contents:
-            if path.startswith(RepoPaths.PROFILES.value):
-                yield PurePath(path).stem
+            parts = PurePath(path).parts
+            match parts:
+                case (RepoPaths.PROFILES.value, _) | (RepoPaths.EXTENSIONS, _, RepoPaths.PROFILES.value, _):
+                    data = self._contents[path].data
+                    if isinstance(data, ProfileDefn) and isinstance(data.name, str):
+                        yield data.name
+                    else:
+                        yield PurePath(path).stem
+                case _:
+                    pass

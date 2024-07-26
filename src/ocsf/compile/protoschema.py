@@ -2,9 +2,10 @@ import dacite
 
 from copy import deepcopy
 from dataclasses import asdict
+from pathlib import PurePath
 from typing import Any, cast
 
-from ocsf.schema import OcsfSchema, OcsfObject, OcsfEvent, OcsfType
+from ocsf.schema import OcsfSchema, OcsfObject, OcsfEvent, OcsfType, OcsfProfile, OcsfExtension
 from ocsf.repository import (
     Repository,
     ObjectDefn,
@@ -71,28 +72,101 @@ class ProtoSchema:
     def profile_path(self, name: str) -> RepoPath:
         return as_path(RepoPaths.PROFILES.value, name, ".json")
 
+    def find_object(self, name: str) -> DefinitionFile:
+        found: list[str] = []
+        for file in self._files.values():
+            if file.path.startswith(RepoPaths.OBJECTS.value) and file.data is not None:
+                assert isinstance(file.data, ObjectDefn)
+                if file.data.get_key() == name or file.data.name == name:
+                    found.append(file.path)
+
+        if len(found) == 0:
+            raise KeyError(f"Object {name} not found")
+        
+        path = sorted(found, key=lambda x: len(x))[0]
+        return self.__getitem__(path)
+
+    def find_event(self, name: str) -> DefinitionFile:
+        found: list[str] = []
+        for file in self._files.values():
+            if file.path.startswith(RepoPaths.EVENTS.value) and file.data is not None:
+                assert isinstance(file.data, EventDefn)
+                if file.data.get_key() == name or file.data.name == name:
+                    found.append(file.path)
+
+        if len(found) == 0:
+            raise KeyError(f"Event {name} not found")
+        
+        path = sorted(found, key=lambda x: len(x))[0]
+        return self.__getitem__(path)
+
+
+    def find_extension_path(self, name: str) -> str:
+        test = as_path(RepoPaths.EXTENSIONS.value, name, SpecialFiles.EXTENSION)
+        if test in self.repo:
+            return as_path(RepoPaths.EXTENSIONS.value, name)
+        
+        for path in self.repo.paths():
+            file = self[path]
+            assert file.path is not None
+            parts = PurePath(file.path).parts
+
+            match parts:
+                case (RepoPaths.EXTENSIONS.value, extn, SpecialFiles.EXTENSION):
+                    assert isinstance(file.data, ExtensionDefn)
+                    assert file.data.name is not None
+                    if file.data.name == name:
+                        return as_path(RepoPaths.EXTENSIONS.value, extn)
+                case _:
+                    pass
+        
+        raise KeyError(f"Extension {name} not found")
+
     def schema(self) -> OcsfSchema:
-        schema = OcsfSchema(version="0.0.0")  # TODO implement version
+        schema = OcsfSchema(version="0.0.0") # Version updated below
 
         for file in self._files.values():
             try:
                 if file.path.startswith(RepoPaths.OBJECTS.value) and not extension(file.path):
                     assert file.data is not None
                     assert isinstance(file.data, ObjectDefn)
-                    assert file.data.name is not None
-                    if not file.data.name.startswith("_"):
+                    key = file.data.get_key()
+                    assert key is not None
+                    if not key.startswith("_"):
                         data = asdict(file.data)
                         _remove_nones(data)
-                        schema.objects[file.data.name] = dacite.from_dict(OcsfObject, data)
+                        schema.objects[key] = dacite.from_dict(OcsfObject, data)
 
                 elif file.path.startswith(RepoPaths.EVENTS.value):
                     assert file.data is not None
                     assert isinstance(file.data, EventDefn)
                     if file.data.uid is not None or file.data.name == "base_event":
-                        assert file.data.name is not None
+                        key = file.data.get_key()
+                        assert key is not None
                         data = asdict(file.data)
                         _remove_nones(data)
-                        schema.classes[file.data.name] = dacite.from_dict(OcsfEvent, data)
+                        schema.classes[key] = dacite.from_dict(OcsfEvent, data)
+
+                elif file.path.startswith(RepoPaths.PROFILES.value):
+                    assert file.data is not None
+                    assert isinstance(file.data, ProfileDefn)
+                    data = asdict(file.data)
+                    _remove_nones(data)
+                    if schema.profiles is None:
+                        schema.profiles = {}
+                    key = file.data.get_key()
+                    assert key is not None
+                    schema.profiles[key] = dacite.from_dict(OcsfProfile, data)
+
+                elif file.path.endswith(SpecialFiles.EXTENSION.value):
+                    assert file.data is not None
+                    assert isinstance(file.data, ExtensionDefn)
+                    assert file.data.name is not None
+                    data = asdict(file.data)
+                    _remove_nones(data)
+                    if schema.extensions is None:
+                        schema.extensions = {}
+                    schema.extensions[file.data.name] = dacite.from_dict(OcsfExtension, data)
 
                 elif file.path == SpecialFiles.DICTIONARY:
                     assert file.data is not None

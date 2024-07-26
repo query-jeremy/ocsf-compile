@@ -22,6 +22,7 @@ from .definitions import (
     DefnWithAttrs,
     DefnWithInclude,
     DefnWithAnnotations,
+    DefnWithExtn,
 )
 from .helpers import (
     RepoPaths,
@@ -55,6 +56,7 @@ __all__ = [
     "DefnWithAttrs",
     "DefnWithInclude",
     "DefnWithName",
+    "DefnWithExtn",
     "DeprecationInfoDefn",
     "DictionaryDefn",
     "DictionaryTypesDefn",

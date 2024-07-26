@@ -10,8 +10,9 @@ repo = read_repo(PATH, preserve_raw_data=True)
 compiler = Compilation(repo)
 
 # TARGET = "events/iam/authentication.json"
-# TARGET = "events/base_event.json"
-TARGET = "extensions/windows/events/prefetch_query.json"
+#TARGET = "events/base_event.json"
+TARGET = "objects/process.json"
+#TARGET = "extensions/windows/events/prefetch_query.json"
 # TARGET = "includes/classification.json"
 from pprint import pprint
 
@@ -27,10 +28,10 @@ prereqs: set[str] = set()
 
 def find_op(target: str):
     for o in order:
-        if o.target == target:
-            if o.prerequisite is not None:
-                find_op(o.prerequisite)
+        if o.target == target and o.target not in prereqs:
+            if o.prerequisite is not None and o.prerequisite not in prereqs:
                 prereqs.add(o.prerequisite)
+                find_op(o.prerequisite)
             # pprint(o)
     return None
 
